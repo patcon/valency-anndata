@@ -3,11 +3,18 @@ name = "valenci-anndata"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+authors = [
+    { name = "Patrick Connolly", email = "patrick.c.connolly@gmail.com" }
+]
 requires-python = ">=3.10"
 dependencies = [
     "anndata>=0.11.4",
     "polis-client",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.uv.sources]
 polis-client = { git = "https://github.com/patcon/polis-client" }
