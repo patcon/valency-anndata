@@ -9,7 +9,7 @@ authors = [
 requires-python = ">=3.10"
 dependencies = [
     "anndata>=0.11.4",
-    "polis-client @ git+https://github.com/patcon/polis-client",
+    "polis-client",
 ]
 
 [build-system]
