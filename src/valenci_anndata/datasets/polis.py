@@ -98,8 +98,8 @@ def polis(source: str):
         adata.uns["votes_csv"] = votes_csv_df
 
         report = client.get_report(report_id=convo_meta.report_id)
-        if report:
-            convo_meta.conversation_id = report.conversation_id
+        assert report is not None
+        convo_meta.conversation_id = report.conversation_id
 
     elif convo_meta.conversation_id:
         votes_list = client.get_all_votes_slow(conversation_id=convo_meta.conversation_id)
@@ -112,7 +112,8 @@ def polis(source: str):
         raise
 
     statements = client.get_comments(conversation_id=convo_meta.conversation_id)
-    adata.uns["statements"] = pd.DataFrame(statements)
+    assert statements is not None
+    adata.uns["statements"] = pd.DataFrame([s.to_dict() for s in statements])
 
     # if convo_meta.conversation_id:
     #     xids = client.get_xids(conversation_id=convo_meta.conversation_id)
