@@ -8,7 +8,8 @@ def rebuild_vote_matrix(
     data: AnnData,
     trim_rule: int | float | str | datetime = 1.0,
     time_col: str = "timestamp",
-) -> AnnData:
+    inplace: bool = True,
+) -> AnnData | None:
     """
     Rebuild a vote matrix from votes CSV, trimming by time, deduplicating votes,
     and returning a new AnnData with vote matrix. Preserves metadata from original.
@@ -42,11 +43,13 @@ def rebuild_vote_matrix(
     )
 
     # Copy over other metadata
-    for key in data.uns:
-        new_adata.uns[key] = data.uns[key]
-    for key in data.obsm:
-        new_adata.obsm[key] = data.obsm[key]
-    for key in data.layers:
-        new_adata.layers[key] = data.layers[key]
+    new_adata.uns.update(data.uns)
+    new_adata.obsm.update(data.obsm)
+    new_adata.layers.update(data.layers)
 
-    return new_adata
+    if inplace:
+        # Replace all internal state of the original AnnData
+        data._init_as_actual(new_adata)
+        return None
+    else:
+        return new_adata
