@@ -1,5 +1,6 @@
-from . import datasets
+from . import datasets, preprocessing
 
 __all__ = [
     "datasets",
+    "preprocessing",
 ]
