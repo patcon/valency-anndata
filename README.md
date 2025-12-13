@@ -1,4 +1,4 @@
-# valenci-anndata
+# valency-anndata
 
 Experimental tooling to support notebook analysis of polislike data.
 

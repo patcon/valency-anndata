@@ -777,7 +777,7 @@ wheels = [
 ]
 
 [[package]]
-name = "valenci-anndata"
+name = "valency-anndata"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
