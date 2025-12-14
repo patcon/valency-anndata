@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from io import StringIO
 from polis_client import PolisClient
 from urllib.parse import urlparse
+from ..preprocessing import rebuild_vote_matrix
 
 
 DEFAULT_BASE = "https://pol.is"
@@ -74,7 +75,8 @@ def _parse_polis_source(source: str):
 
     raise ValueError(f"Unrecognized Polis source format: {source}")
 
-def polis(source: str):
+
+def polis(source: str, *, build_X: bool = True) -> ad.AnnData:
     """
     Accepts any of the following:
     - https://pol.is/report/<report_id>
@@ -87,7 +89,20 @@ def polis(source: str):
     Returns:
         AnnData object
     """
-    adata = ad.AnnData(X=None)
+    adata = _load_raw_polis_data(source)
+
+    if build_X:
+        rebuild_vote_matrix(adata, trim_rule=1.0, inplace=True)
+
+    # if convo_meta.conversation_id:
+    #     xids = client.get_xids(conversation_id=convo_meta.conversation_id)
+    #     adata.uns["xids"] = pd.DataFrame(xids)
+
+    return adata
+
+
+def _load_raw_polis_data(source):
+    adata = ad.AnnData()
 
     convo_src = _parse_polis_source(source)
     client = PolisClient(base_url=convo_src.base_url)
@@ -183,9 +198,5 @@ def polis(source: str):
         "X": "participant × statement vote matrix (derived)",
         "votes": "raw vote events",
     }
-
-    # if convo_meta.conversation_id:
-    #     xids = client.get_xids(conversation_id=convo_meta.conversation_id)
-    #     adata.uns["xids"] = pd.DataFrame(xids)
 
     return adata
