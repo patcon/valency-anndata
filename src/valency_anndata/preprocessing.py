@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Optional
 from anndata import AnnData
 from .utils import trim_by_time
-import pandas as pd
 
 def rebuild_vote_matrix(
     data: AnnData,
