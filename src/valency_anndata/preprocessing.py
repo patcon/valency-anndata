@@ -15,9 +15,9 @@ def rebuild_vote_matrix(
     """
 
     # Load votes CSV
-    votes_df = data.uns.get("votes_csv")
+    votes_df = data.uns.get("votes")
     if votes_df is None:
-        raise KeyError("`uns['votes_csv']` not found in AnnData")
+        raise KeyError("`uns['votes']` not found in AnnData")
     votes_df = votes_df.copy()
 
     # Trim by time
