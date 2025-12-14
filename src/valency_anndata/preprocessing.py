@@ -42,8 +42,8 @@ def rebuild_vote_matrix(
     # Build a new AnnData
     new_adata = AnnData(
         X=vote_matrix_df.to_numpy(dtype=float),
-        obs=pd.DataFrame(index=vote_matrix_df.index.astype(str)),
-        var=pd.DataFrame(index=vote_matrix_df.columns.astype(str))
+        obs=data.obs.reindex(vote_matrix_df.index.astype(str)),
+        var=data.var.reindex(vote_matrix_df.columns.astype(str))
     )
 
     # Copy over other metadata
