@@ -1,5 +1,6 @@
-from .polis import polis
+from .polis import load, translate_statements
 
 __all__ = [
-    "polis",
+    "load",
+    "translate_statements",
 ]

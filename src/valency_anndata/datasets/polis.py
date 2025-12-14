@@ -81,7 +81,7 @@ def _parse_polis_source(source: str):
     raise ValueError(f"Unrecognized Polis source format: {source}")
 
 
-def polis(source: str, *, translate_to: Optional[str] = None, build_X: bool = True) -> ad.AnnData:
+def load(source: str, *, translate_to: Optional[str] = None, build_X: bool = True) -> ad.AnnData:
     """
     Load a Polis conversation or report into an AnnData object.
 
@@ -338,3 +338,8 @@ def translate_statements(
         return None
     else:
         return translated_texts
+
+__all__ = [
+    "load",
+    "translate_statements",
+]
