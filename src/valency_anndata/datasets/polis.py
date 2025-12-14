@@ -1,12 +1,16 @@
+import asyncio
 import re
-from typing import Optional
 import anndata as ad
 import pandas as pd
 from dataclasses import dataclass
+from googletrans import Translator
 from io import StringIO
 from polis_client import PolisClient
+from typing import List, Optional
 from urllib.parse import urlparse
+
 from ..preprocessing import rebuild_vote_matrix
+from ..utils import run_async
 
 
 DEFAULT_BASE = "https://pol.is"
@@ -284,18 +288,17 @@ def _populate_var_statements(adata, translate_to: Optional[str] = None):
     if translate_to is not None:
         translate_statements(adata, translate_to=translate_to, inplace=True)
 
-def populate_statements_txt(adata, translate_to: Optional[str] = None):
-    adata.uns["statements"]["txt"]
-
-from googletrans import Translator
-import asyncio
-
-async def _translate_texts(texts: list[str], dest_lang: str) -> list[str]:
+# private async function
+async def _translate_texts_async(texts: List[str], dest_lang: str) -> List[str]:
     async with Translator() as translator:
         results = await asyncio.gather(
             *(translator.translate(t, dest=dest_lang) for t in texts)
         )
     return [r.text for r in results]
+
+# public synchronous wrapper
+def translate_texts(texts: List[str], dest_lang: str) -> List[str]:
+    return run_async(_translate_texts_async(texts, dest_lang))
 
 def translate_statements(
     adata: ad.AnnData,
@@ -326,7 +329,7 @@ def translate_statements(
     statements_aligned = statements_aligned.reindex(adata.var_names)
 
     original_texts = statements_aligned["txt"].tolist()
-    translated_texts = asyncio.run(_translate_texts(original_texts, translate_to))
+    translated_texts = asyncio.run(_translate_texts_async(original_texts, translate_to))
 
     if inplace:
         adata.var["content"] = translated_texts

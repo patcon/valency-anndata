@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import asyncio
+import functools
+from typing import Any, Coroutine
 
 
 def trim_by_time(
@@ -183,3 +186,24 @@ def trim_by_time(
     # Unsupported type
     # ---------------------------------------------------------------
     raise TypeError(f"Unsupported rule type: {type(rule)}")
+
+def run_async(coro: Coroutine[Any, Any, Any]) -> Any:
+    """
+    Run an async coroutine safely in scripts or Jupyter notebooks.
+
+    Usage:
+        result = run_async(my_async_function(...))
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        # Jupyter notebook or other running loop
+        import nest_asyncio
+        nest_asyncio.apply()
+        return loop.run_until_complete(coro)
+    else:
+        # normal script
+        return asyncio.run(coro)

@@ -10,6 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
     "anndata>=0.11.4",
     "googletrans>=4.0.2",
+    "nest-asyncio>=1.6.0",
     "polis-client",
 ]
 
