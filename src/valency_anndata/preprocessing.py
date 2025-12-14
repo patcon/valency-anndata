@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from anndata import AnnData
 from .utils import trim_by_time
 import pandas as pd
@@ -8,10 +9,14 @@ def rebuild_vote_matrix(
     trim_rule: int | float | str | datetime = 1.0,
     time_col: str = "timestamp",
     inplace: bool = True,
-) -> AnnData | None:
+) -> Optional[AnnData]:
     """
-    Rebuild a vote matrix from votes CSV, trimming by time, deduplicating votes,
-    and returning a new AnnData with vote matrix. Preserves metadata from original.
+    Rebuild a vote matrix from votes stored in `adata.uns['votes']`.
+
+    - Trims votes by time according to `trim_rule`.
+    - Deduplicates votes by keeping the last vote per voter-comment pair.
+    - Returns a new AnnData with `.obs` = voters, `.var` = comments, `.X` = vote values.
+    - Preserves existing `uns`, `obsm`, and `layers`.
     """
 
     # Load votes CSV
