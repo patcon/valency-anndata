@@ -1,0 +1,146 @@
+import pandas as pd
+from anndata import AnnData
+from typing import Sequence, Tuple, Optional, Any
+import re
+
+
+# Use Any for now to handle all possible AnnData matrix types
+Matrix = Any
+
+def langevitour(
+    adata: AnnData,
+    *,
+    use_reps: Optional[Sequence[str]] = None,
+    color: Optional[str] = None,
+    scale: Optional[str] = None,
+    point_size: int = 2,
+    **kwargs,
+):
+    """
+    Interactive Langevitour visualization over one or more representations.
+
+    Parameters
+    ----------
+    adata
+        AnnData object.
+    use_reps
+        Representations to include, e.g. ["X_pca[:10]", "X_umap[:2]"].
+    color
+        obs column for grouping / coloring.
+    scale
+        obs column for point scaling.
+    point_size
+        Base point size.
+    **kwargs
+        Passed through to `Langevitour`.
+    """
+    import warnings
+
+    with warnings.catch_warnings():
+        # Prevent setuptools from showing a warning about
+        # Langevitour using `import pkg_resources`.
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API",
+            category=UserWarning,
+        )
+        from langevitour import Langevitour
+
+    X_df = resolve_use_reps(adata, use_reps)
+
+    group = adata.obs[color].tolist() if color is not None else None
+    scale_vals = adata.obs[scale].tolist() if scale is not None else None
+
+    return Langevitour(
+        X_df,
+        group=group,
+        scale=scale_vals,
+        point_size=point_size,
+        **kwargs,
+    )
+
+def resolve_use_reps(
+    adata: AnnData,
+    use_reps: Optional[Sequence[str]],
+    *,
+    default_rep: str = "X_pca",
+    default_n_dims: int = 10,
+) -> pd.DataFrame:
+    """
+    Resolve and concatenate representations from `adata.obsm`
+    into a single DataFrame.
+
+    Parameters
+    ----------
+    adata
+        AnnData object.
+    use_reps
+        Sequence like ["X_pca[:10]", "X_umap[:2]"].
+        If None, defaults to [f"{default_rep}[:{default_n_dims}]"].
+    default_rep
+        Representation to use if `use_reps` is None.
+    default_n_dims
+        Number of dimensions for default representation.
+
+    Returns
+    -------
+    pd.DataFrame
+        Concatenated feature space with named columns.
+    """
+    if use_reps is None:
+        use_reps = [f"{default_rep}[:{default_n_dims}]"]
+
+    dfs = []
+
+    for rep in use_reps:
+        key, n_dims = parse_rep(rep)
+
+        if key not in adata.obsm:
+            raise KeyError(
+                f"Representation '{key}' not found in adata.obsm. "
+                f"Available: {list(adata.obsm.keys())}"
+            )
+
+        X: Matrix = adata.obsm[key]
+        if n_dims is not None:
+            X = X[:, :n_dims]
+
+        n_actual = X.shape[1]
+
+        cols = [f"{key}_{i+1}" for i in range(n_actual)]
+        df = pd.DataFrame(X, index=adata.obs_names, columns=pd.Index(cols))
+        dfs.append(df)
+
+    return pd.concat(dfs, axis=1)
+
+_REP_RE = re.compile(
+    r"""
+    ^
+    (?P<key>[A-Za-z0-9_]+)      # obsm key, e.g. X_pca
+    (?:\[\s*:\s*(?P<n>\d+)\s*\])?  # optional [:N]
+    $
+    """,
+    re.VERBOSE,
+)
+
+
+def parse_rep(rep: str) -> Tuple[str, Optional[int]]:
+    """
+    Parse a representation spec like 'X_pca[:10]' or 'X_umap'.
+
+    Returns
+    -------
+    (key, n_dims)
+        key: obsm key
+        n_dims: number of dimensions to take (None = all)
+    """
+    m = _REP_RE.match(rep)
+    if not m:
+        raise ValueError(
+            f"Invalid rep specification '{rep}'. "
+            "Expected e.g. 'X_pca[:10]' or 'X_umap[:2]'."
+        )
+
+    key = m.group("key")
+    n = m.group("n")
+    return key, int(n) if n is not None else None

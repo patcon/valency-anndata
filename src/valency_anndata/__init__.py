@@ -1,4 +1,4 @@
-from . import datasets, preprocessing, tools
+from . import datasets, preprocessing, tools, viz
 from . import scanpy
 
 pp = preprocessing
@@ -8,6 +8,7 @@ __all__ = [
     "datasets",
     "preprocessing",
     "tools",
+    "viz",
     # Backward-compat with scanpy.
     "pp",
     "tl",
