@@ -49,12 +49,17 @@ def langevitour(
     X_df = resolve_use_reps(adata, use_reps)
 
     group = adata.obs[color].tolist() if color is not None else None
-    scale_vals = adata.obs[scale].tolist() if scale is not None else None
+
+    if scale is None:
+        s = X_df.std() * 4
+        scale_factors = [s] if isinstance(s, (float, int)) else s.tolist()
+    else:
+        scale_factors = scale
 
     return Langevitour(
         X_df,
         group=group,
-        scale=scale_vals,
+        scale=scale_factors,
         point_size=point_size,
         **kwargs,
     )
