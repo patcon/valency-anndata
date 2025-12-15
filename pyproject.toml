@@ -12,7 +12,7 @@ dependencies = [
     "googletrans>=4.0.2",
     "nest-asyncio>=1.6.0",
     "polis-client",
-    "scanpy",
+    "scanpy[leiden]",
     # Intel macOS only (no usable wheels for pre Apple M1)
     # See: https://github.com/numba/llvmlite/issues/1357#issuecomment-3516587016
     "llvmlite<=0.45.1; platform_system == 'Darwin' and platform_machine == 'x86_64'",
