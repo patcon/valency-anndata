@@ -1,4 +1,5 @@
 import valency_anndata as val
+import numpy as np
 
 # adata = val.datasets.polis.load("https://pol.is/report/r2dfw8eambusb8buvecjt") # small
 adata = val.datasets.polis.load("https://pol.is/report/r29kkytnipymd3exbynkd", translate_to=None) # Chile
@@ -12,8 +13,8 @@ print(adata.uns["schema"])
 print(adata.var)
 
 # val.datasets.polis.translate_statements(adata, translate_to="ja")
-val.preprocessing.impute(adata, strategy="mean")
-val.preprocessing.calculate_qc_metrics(adata, inplace=True)
-# val.tools.pca(adata, layer="X_imputed_mean")
-# val.scanpy.pl.pca(adata)
-print(adata)
+if not isinstance(adata.X, np.ndarray):
+    raise TypeError("valency-anndata Polis pipeline assumes dense adata.X")
+
+val.tools.recipe_polis(adata, key_added="X_polis")
+val.scanpy.pl.embedding(adata, basis="polis")
