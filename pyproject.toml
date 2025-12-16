@@ -19,6 +19,7 @@ dependencies = [
     # Langevitour expects setuptools to work.
     "langevitour>=0.8.0",
     "setuptools<81",
+    "red-dwarf",
 ]
 
 [build-system]
@@ -27,3 +28,4 @@ build-backend = "hatchling.build"
 
 [tool.uv.sources]
 polis-client = { git = "https://github.com/patcon/polis-client" }
+red-dwarf = { git = "https://github.com/polis-community/red-dwarf" }
