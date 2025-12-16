@@ -13,6 +13,7 @@ def langevitour(
     use_reps: Optional[Sequence[str]] = None,
     color: Optional[str] = None,
     scale: Optional[str] = None,
+    initial_axes: Optional[list[str]] = None,
     point_size: int = 2,
     **kwargs,
 ):
@@ -29,10 +30,13 @@ def langevitour(
         obs column for grouping / coloring.
     scale
         obs column for point scaling.
+    initial_axes
+        Set up to 3 initial axes xyz, e.g. ["U_umap[:2]", "X_pca[0]"]
     point_size
         Base point size.
     **kwargs
         Passed through to `Langevitour`.
+        See R docs: https://logarithmic.net/langevitour/reference/langevitour.html#arguments
     """
     import warnings
 
@@ -50,6 +54,27 @@ def langevitour(
 
     group = adata.obs[color].tolist() if color is not None else None
 
+    state = {}
+    if initial_axes:
+        # default positions in Y, X, Z plane
+        default_positions = [
+            [0.85, 0],  # pseudo-X axis
+            [0, 0.95],  # pseudo-Y axis
+            [0.6, 0.6], # pseudo-Z axis
+        ]
+
+        labelPos = {}
+        for i, rep_str in enumerate(initial_axes):
+            if i >= 3:
+                break  # only support 3 initial axes
+            key, dim = parse_rep(rep_str)
+            if dim is None:
+                dim = 0  # default to first dimension if not specified
+            col_name = format_rep_column(key, dim + 1)
+            labelPos[col_name] = default_positions[i]
+
+        state["labelPos"] = labelPos
+
     if scale is None:
         s = X_df.std() * 4
         scale_factors = [s] if isinstance(s, (float, int)) else s.tolist()
@@ -61,6 +86,7 @@ def langevitour(
         group=group,
         scale=scale_factors,
         point_size=point_size,
+        state=state,
         **kwargs,
     )
 
