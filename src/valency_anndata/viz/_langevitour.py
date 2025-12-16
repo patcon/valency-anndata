@@ -67,7 +67,7 @@ def langevitour(
         for i, rep_str in enumerate(initial_axes):
             if i >= 3:
                 break  # only support 3 initial axes
-            key, dim = parse_rep(rep_str)
+            key, dim, _ = parse_rep(rep_str)
             if dim is None:
                 dim = 0  # default to first dimension if not specified
             col_name = format_rep_column(key, dim + 1)
@@ -124,7 +124,7 @@ def resolve_use_reps(
     dfs = []
 
     for rep in use_reps:
-        key, n_dims = parse_rep(rep)
+        key, n_dims, single = parse_rep(rep)
 
         if key not in adata.obsm:
             raise KeyError(
@@ -134,11 +134,14 @@ def resolve_use_reps(
 
         X: Matrix = adata.obsm[key]
         if n_dims is not None:
-            if isinstance(n_dims, int) and n_dims < X.shape[1]:
-                # single-column slice
-                X = X[:, n_dims : n_dims + 1]
-            # if n_dims >= X.shape[1], take all columns (or leave as-is)
-            # alternatively, could raise an error for out-of-bounds
+            if single:
+                # pick single column
+                X = X[:, n_dims:n_dims + 1]
+            else:
+                # [:N] slice
+                X = X[:, :n_dims]
+
+        # n_dims is None → take all columns
 
         n_actual = X.shape[1]
 
@@ -181,15 +184,21 @@ _REP_RE = re.compile(
 )
 
 
-def parse_rep(rep: str) -> Tuple[str, Optional[int]]:
+def parse_rep(rep: str) -> Tuple[str, Optional[int], bool]:
     """
-    Parse a representation spec like 'X_pca[:10]', 'X_umap', or 'X_pca[0]'.
+    Parse representation spec like:
+      - 'X_umap'   -> all columns
+      - 'X_pca[:2]' -> first 2 columns
+      - 'X_pca[0]'  -> single column
 
     Returns
     -------
-    (key, n_dims)
-        key: obsm key
-        n_dims: number of dimensions to take (None = all) or single index
+    key: str
+        obsm key
+    n: Optional[int]
+        number of columns to take if a slice (None = take all)
+    single: bool
+        True if a single column, False if slice or full
     """
     m = _REP_RE.match(rep)
     if not m:
@@ -204,10 +213,10 @@ def parse_rep(rep: str) -> Tuple[str, Optional[int]]:
 
     if stop is not None:
         # [:N] slice case
-        return key, int(stop)
+        return key, int(stop), False
     elif start:
-        # [i] single-dim case
-        return key, int(start)
+        # single column
+        return key, int(start), True
     else:
-        # no slice, take all dims
-        return key, None
+        # no slice, take all
+        return key, None, False
