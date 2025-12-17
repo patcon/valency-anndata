@@ -238,23 +238,41 @@ def adata_structure_svg(adata: AnnData):
     line_height = 14
     obs_key_spacing = 15  # horizontal spacing between rotated keys
 
+    # -------------------
+    # Determine matrix size
+    # -------------------
     obs_cells = min(max_cells, math.ceil(math.sqrt(adata.n_obs)))
     var_cells = min(max_cells, math.ceil(math.sqrt(adata.n_vars)))
 
     X_width = var_cells * cell
     X_height = obs_cells * cell
 
+    # -------------------
     # Var block height
+    # -------------------
     var_keys = [k for k in adata.var]
     var_block_height = max(60, len(var_keys) * line_height)
 
+    # -------------------
+    # Obs block width (adaptive to rotated keys)
+    # -------------------
+    obs_keys = [k for k in adata.obs]
+    min_obs_width = 60
+    needed_obs_width = len(obs_keys) * obs_key_spacing
+    obs_width = max(min_obs_width, needed_obs_width)
+
+    # -------------------
+    # Canvas size (expand width to fit rotated obs keys)
+    # -------------------
+    x0 = pad + 120
+    y0 = pad + var_block_height + 30
+    canvas_width = x0 + X_width + 30 + obs_width + 20  # extra 20px padding
+    canvas_height = X_height + var_block_height + 150
+
     dwg = svgwrite.Drawing(
-        size=(X_width + 400, X_height + var_block_height + 150),
+        size=(canvas_width, canvas_height),
         profile="full",
     )
-
-    x0 = pad + 120
-    y0 = pad + var_block_height + 30  # leave space for var block above
 
     # -------------------
     # X block
@@ -272,13 +290,8 @@ def adata_structure_svg(adata: AnnData):
     )
 
     # -------------------
-    # Obs block (right) - adaptive width
+    # Obs block (right)
     # -------------------
-    obs_keys = [k for k in adata.obs]
-    min_obs_width = 60
-    needed_obs_width = len(obs_keys) * obs_key_spacing  # space for rotated keys
-    obs_width = max(min_obs_width, needed_obs_width)
-
     draw_grid_block(
         dwg,
         x=x0 + X_width + 30,
@@ -304,7 +317,7 @@ def adata_structure_svg(adata: AnnData):
                 font_size=12,
                 font_family="sans-serif",
                 text_anchor="start",
-                transform=f"rotate(-45,{x},{baseline_y})",  # rotate 45° counterclockwise
+                transform=f"rotate(-45,{x},{baseline_y})",
             )
         )
 
@@ -323,7 +336,9 @@ def adata_structure_svg(adata: AnnData):
         stroke="#9b59b6",
     )
 
-    # Var keys (to the left of var block, bottom-aligned)
+    # -------------------
+    # Var keys (left of var block, bottom-aligned)
+    # -------------------
     for i, key in enumerate(var_keys):
         y = y0 - 27 - (len(var_keys) - i) * line_height + line_height / 2
         dwg.add(
