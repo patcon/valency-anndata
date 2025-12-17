@@ -6,7 +6,8 @@ import valency_anndata as val
 def recipe_polis(
     adata: AnnData,
     *,
-    key_added: str = "X_polis",
+    key_added_pca: str = "X_polis",
+    key_added_kmeans: str = "kmeans_polis",
     inplace: bool = True,
 ):
     if not inplace:
@@ -46,7 +47,16 @@ def recipe_polis(
     adata.obsm["X_pca_masked_scaled"] = X_pca_unscaled / scaling_factors[:, None]
 
     # Set a recognizable key
-    adata.obsm[key_added] = adata.obsm["X_pca_masked_scaled"]
+    adata.obsm[key_added_pca] = adata.obsm["X_pca_masked_scaled"]
+
+    val.tools.kmeans(
+        adata,
+        use_rep=key_added_pca,
+        k_bounds=(2, 5),
+        init="polis",
+        key_added=key_added_kmeans,
+        inplace=inplace,
+    )
 
     if not inplace:
         return adata

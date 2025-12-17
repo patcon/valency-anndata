@@ -1671,7 +1671,7 @@ wheels = [
 [[package]]
 name = "red-dwarf"
 version = "0.3.0"
-source = { git = "https://github.com/polis-community/red-dwarf#95a98477e60c6f28816f196a1497e7d37250871e" }
+source = { git = "https://github.com/polis-community/red-dwarf?rev=algo-registries#455e05b9c3e3ee4f2589805975f03eb0b3268e00" }
 dependencies = [
     { name = "fake-useragent" },
     { name = "pandas" },
@@ -2172,7 +2172,7 @@ requires-dist = [
     { name = "llvmlite", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'", specifier = "<=0.45.1" },
     { name = "nest-asyncio", specifier = ">=1.6.0" },
     { name = "polis-client", git = "https://github.com/patcon/polis-client" },
-    { name = "red-dwarf", git = "https://github.com/polis-community/red-dwarf" },
+    { name = "red-dwarf", git = "https://github.com/polis-community/red-dwarf?rev=algo-registries" },
     { name = "scanpy", extras = ["leiden"] },
     { name = "setuptools", specifier = "<81" },
     { name = "svgwrite", specifier = ">=1.4.3" },
