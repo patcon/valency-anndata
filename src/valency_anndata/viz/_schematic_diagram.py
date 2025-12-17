@@ -245,7 +245,7 @@ def adata_structure_svg(adata: AnnData):
     X_height = obs_cells * cell
 
     # Var block height
-    var_keys = list(adata.var_keys())
+    var_keys = [k for k in adata.var]
     var_block_height = max(60, len(var_keys) * line_height)
 
     dwg = svgwrite.Drawing(
@@ -274,7 +274,7 @@ def adata_structure_svg(adata: AnnData):
     # -------------------
     # Obs block (right) - adaptive width
     # -------------------
-    obs_keys = list(adata.obs_keys())
+    obs_keys = [k for k in adata.obs]
     min_obs_width = 60
     needed_obs_width = len(obs_keys) * obs_key_spacing  # space for rotated keys
     obs_width = max(min_obs_width, needed_obs_width)
