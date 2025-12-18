@@ -118,7 +118,9 @@ print(adata_snap)
 print("=========")
 print(adata)
 
-# del adata.obs["n_votes"]
-# val.viz.schematic_diagram(adata, diff_from=adata_snap)
+adata_snap_layers = adata.copy()
+del adata.obs["n_votes"]
+del adata.layers["X_masked"]
+val.viz.schematic_diagram(adata, diff_from=adata_snap_layers)
 
 # val.scanpy.pl.pca(adata, color="kmeans_polis")
