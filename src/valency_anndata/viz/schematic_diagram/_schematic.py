@@ -183,9 +183,11 @@ def adata_structure_svg(adata: AnnData, diff_from: AnnData | None = None):
     y0 = pad + var_block_height + 30
     canvas_width = x0 + X_width + 30 + obs_width + extra_canvas_padding
 
+    # maximum shift from stacked layers
     num_layers = len(adata.layers)
-    layer_height_total = num_layers * 20 + num_layers * cell * max_cells  # rough estimate
-    canvas_height = X_height + var_block_height + 150 + layer_height_total
+    max_layer_shift = LAYER_Y_OFFSET * num_layers
+    # canvas height: bottom of X + maximum layer shift + padding
+    canvas_height = y0 + X_height + max_layer_shift + 50  # extra 20 px padding
 
     dwg = svgwrite.Drawing(size=(canvas_width, canvas_height), profile="full")
 
