@@ -246,6 +246,19 @@ def adata_structure_svg(adata: AnnData, diff_from: AnnData | None = None):
     line_height = 14
     obs_key_spacing = 15  # horizontal spacing between rotated keys
 
+    if diff_from is not None:
+        # Start with the original order from diff_from
+        obs_keys = list(diff_from.obs.keys())
+        # Add any new keys that appear in adata but not in diff_from
+        obs_keys += [k for k in adata.obs.keys() if k not in obs_keys]
+
+        # Similarly for var keys
+        var_keys = list(diff_from.var.keys())
+        var_keys += [k for k in adata.var.keys() if k not in var_keys]
+    else:
+        obs_keys = list(adata.obs.keys())
+        var_keys = list(adata.var.keys())
+
     # -------------------
     # Determine diff sets
     # -------------------
@@ -255,7 +268,6 @@ def adata_structure_svg(adata: AnnData, diff_from: AnnData | None = None):
     if diff_from is not None:
         obs_prev = set(diff_from.obs.keys())
         obs_now = set(adata.obs.keys())
-
         for key in obs_now - obs_prev:
             obs_status[key] = "added"
         for key in obs_prev - obs_now:
@@ -263,7 +275,6 @@ def adata_structure_svg(adata: AnnData, diff_from: AnnData | None = None):
 
         var_prev = set(diff_from.var.keys())
         var_now = set(adata.var.keys())
-
         for key in var_now - var_prev:
             var_status[key] = "added"
         for key in var_prev - var_now:
@@ -281,13 +292,11 @@ def adata_structure_svg(adata: AnnData, diff_from: AnnData | None = None):
     # -------------------
     # Var block height
     # -------------------
-    var_keys = [k for k in adata.var]
     var_block_height = max(60, len(var_keys) * line_height)
 
     # -------------------
     # Obs block width
     # -------------------
-    obs_keys = [k for k in adata.obs]
     min_obs_width = 60
     needed_obs_width = len(obs_keys) * obs_key_spacing
     obs_width = max(min_obs_width, needed_obs_width)
