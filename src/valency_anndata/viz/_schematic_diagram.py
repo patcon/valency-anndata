@@ -229,14 +229,38 @@ def draw_grid_block(
 
 
 # ------------------------------------------------------------
-# AnnData → SVG
+# AnnData → SVG with diff
 # ------------------------------------------------------------
-def adata_structure_svg(adata: AnnData):
+def adata_structure_svg(adata: AnnData, diff_from: AnnData | None = None):
     cell = 18
     max_cells = 10
     pad = 40
     line_height = 14
     obs_key_spacing = 15  # horizontal spacing between rotated keys
+
+    # -------------------
+    # Determine diff sets
+    # -------------------
+    obs_color_map = {}
+    var_color_map = {}
+    if diff_from is not None:
+        obs_prev = set(diff_from.obs.keys())
+        obs_now = set(adata.obs.keys())
+        for key in obs_now:
+            if key not in obs_prev:
+                obs_color_map[key] = "green"  # added
+        for key in obs_prev:
+            if key not in obs_now:
+                obs_color_map[key] = "red"    # removed
+
+        var_prev = set(diff_from.var.keys())
+        var_now = set(adata.var.keys())
+        for key in var_now:
+            if key not in var_prev:
+                var_color_map[key] = "green"
+        for key in var_prev:
+            if key not in var_now:
+                var_color_map[key] = "red"
 
     # -------------------
     # Determine matrix size
@@ -254,22 +278,18 @@ def adata_structure_svg(adata: AnnData):
     var_block_height = max(60, len(var_keys) * line_height)
 
     # -------------------
-    # Obs block width (adaptive to rotated keys)
+    # Obs block width
     # -------------------
     obs_keys = [k for k in adata.obs]
     min_obs_width = 60
     needed_obs_width = len(obs_keys) * obs_key_spacing
     obs_width = max(min_obs_width, needed_obs_width)
 
-    # Add extra padding for the last key's approximate width (character count * font size)
     font_size = 12
     tilt_factor = 0.707  # sin/cos 45°
     last_key_extra = len(obs_keys[-1]) * (font_size * 0.5) * tilt_factor if obs_keys else 0
     extra_canvas_padding = last_key_extra + 10
 
-    # -------------------
-    # Canvas size (expand width to fit rotated obs keys)
-    # -------------------
     x0 = pad + 120
     y0 = pad + var_block_height + 30
     canvas_width = x0 + X_width + 30 + obs_width + extra_canvas_padding
@@ -313,9 +333,10 @@ def adata_structure_svg(adata: AnnData):
     # -------------------
     # Obs keys (rotated 45° above obs block)
     # -------------------
-    baseline_y = y0 - 7  # bottom-left corner alignment
+    baseline_y = y0 - 7
     for i, key in enumerate(obs_keys):
         x = x0 + X_width + 30 + 10 + i * obs_key_spacing
+        color = obs_color_map.get(key, "black")
         dwg.add(
             dwg.text(
                 key,
@@ -323,6 +344,7 @@ def adata_structure_svg(adata: AnnData):
                 font_size=font_size,
                 font_family="sans-serif",
                 text_anchor="start",
+                fill=color,
                 transform=f"rotate(-45,{x},{baseline_y})",
             )
         )
@@ -343,10 +365,11 @@ def adata_structure_svg(adata: AnnData):
     )
 
     # -------------------
-    # Var keys (left of var block, bottom-aligned)
+    # Var keys (left of var block)
     # -------------------
     for i, key in enumerate(var_keys):
         y = y0 - 27 - (len(var_keys) - i) * line_height + line_height / 2
+        color = var_color_map.get(key, "black")
         dwg.add(
             dwg.text(
                 key,
@@ -354,6 +377,7 @@ def adata_structure_svg(adata: AnnData):
                 font_size=12,
                 font_family="sans-serif",
                 text_anchor="end",
+                fill=color,
             )
         )
 
@@ -386,6 +410,6 @@ def _show_svg(dwg):
         webbrowser.open(f"file://{temp_svg_path}")
         print("Opened in your browser")
 
-def schematic_diagram(adata: AnnData):
-    dwg = adata_structure_svg(adata)
+def schematic_diagram(adata: AnnData, diff_from: AnnData | None = None):
+    dwg = adata_structure_svg(adata, diff_from=diff_from)
     _show_svg(dwg)
