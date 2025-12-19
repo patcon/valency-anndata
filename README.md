@@ -10,6 +10,10 @@ Experimental tooling to support notebook analysis of polislike data.
 
 See: [`example-usage.ipynb`](./example-usage.ipynb)
 
+## Contributing
+
+We are maintaining a custom [`CONTRIBUTING.md`](./CONTRIBUTING.md) with specific links and a compiled list of entry tasks!
+
 <!-- Links -->
    [scanpy]: https://scanpy.readthedocs.io/
 

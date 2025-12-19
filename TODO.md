@@ -1,0 +1,22 @@
+
+- [ ] add `val.preprocess.calculate_vote_qc_metrics()`
+    - essentially looking for patterns of duplicates and vote times which are lost from matrix
+- [ ] add `val.proprocess.calculate_matrix_qc_matrics()`
+    - analog or wrapper of `sc.pp.calculate_qc_metrics()`
+    - high agree/disagree/pass rate
+        - maybe became high-pass after a certain point in time
+    - pass rate diverging sharply from population baseline
+    - small identical subsets
+    - random votes (true random, or pseudo-random of human trying to be random)
+    - See: https://chatgpt.com/share/693f4a76-03c0-800b-97f2-0e28a0460168
+    - identity voting patterns (or near-identical)
+    - calibration statements to help weed out people voting disingenously?
+    - per-participant voting speed
+    - time-to-first-vote after joining
+    - constant intervals between votes
+    - voting on same statements at same time (synchrony)
+    - bursts timed to external events (brigade detection)
+    - comments: small set of users vote early and affect visibility
+    - troll signals (disagreement with their neighborhood)
+    - population-level sanity checks
+        - 
