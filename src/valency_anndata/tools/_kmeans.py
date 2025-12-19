@@ -90,7 +90,8 @@ def kmeans(
     if mask is None:
         full_labels = raw_labels
     else:
-        full_labels = np.full(adata.n_obs, np.nan)
+        # dtype=object keeps labels from casting to float.
+        full_labels = np.full(adata.n_obs, np.nan, dtype=object)
         full_labels[mask] = raw_labels
 
     labels = pd.Categorical(full_labels)
