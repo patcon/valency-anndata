@@ -101,6 +101,10 @@ def resolve_use_reps(
     Resolve and concatenate representations from `adata.obsm`
     into a single DataFrame.
 
+    See: https://logarithmic.net/langevitour/
+
+    Additional example: https://colab.research.google.com/github/pfh/langevitour/blob/main/py/examples/langevitour.ipynb
+
     Parameters
     ----------
     adata
