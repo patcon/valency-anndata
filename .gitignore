@@ -8,3 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Hints for IDE docstrings.
+# See: scripts/generate_ide_docstring_hints.py
+*.pyi

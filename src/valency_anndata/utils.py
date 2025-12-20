@@ -206,3 +206,16 @@ def run_async(coro: Coroutine[Any, Any, Any]) -> Any:
     else:
         # normal script
         return asyncio.run(coro)
+
+# ----------------------------
+# Re-export public Scanpy wrappers with docstring hint of provenance
+# ----------------------------
+def _reexport_with_doc(obj):
+    _DOC_PREFIX_TMPL = "RE-EXPORTED FROM: {origin}\n\n"
+
+    if obj.__doc__:
+        module_path = obj.__module__
+        func_name = obj.__name__
+        origin = f"{module_path}.{func_name}"
+        obj.__doc__ = _DOC_PREFIX_TMPL.format(origin=origin) + obj.__doc__
+    return obj
