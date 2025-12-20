@@ -34,19 +34,19 @@ def schematic_diagram(
 
     In render mode:
     - The diagram visualizes the structure of ``adata`` (X, obs, var).
-    - If ``diff_from`` is provided, labels in ``obs`` and ``var`` are highlighted
-      to indicate additions and removals relative to ``diff_from``.
-    - If ``diff_from`` is not provided, no diff highlighting will be applied.
+    - If ``diff_from`` is provided, labels in ``obs``, ``var``, ``layers``, and ``obsm``
+      are highlighted to indicate additions and removals relative to ``diff_from``.
+    - If ``diff_from`` is not provided, **no diff highlighting is applied**; the
+      diagram is rendered normally.
     - The diagram is displayed inline (in notebooks) or opened in a browser
       (in script mode).
 
     Parameters
     ----------
     adata : AnnData, optional
-        The AnnData object to visualize.
+        The AnnData object to visualize. Must be provided in render mode.
     diff_from : AnnData, optional
-        An optional snapshot to diff against. Explicit diffs always take
-        precedence over any snapshot captured via a context manager.
+        An optional snapshot to diff against.
 
     Returns
     -------
@@ -59,16 +59,22 @@ def schematic_diagram(
     Capture a snapshot of an AnnData object at the beginning of a ``with`` block,
     and automatically render a diff schematic on exit.
 
-    Example
-    -------
+    Examples
+    --------
     >>> with schematic_diagram(diff_from=adata):
-    ...     some_transformation(adata)
+    ...     val.tools.some_transformation(adata, inplace=True)
+    >>> with schematic_diagram():
+    ...     adata = val.datasets.polis.load(...)
 
     In context-manager mode:
-    - ``diff_from`` must be provided, ``adata`` must be omitted.
-    - A snapshot of ``diff_from`` is taken on entry to the ``with`` block.
-    - On exit, a schematic diff between the original snapshot and the
-      current state of ``adata`` is automatically rendered.
+    - If ``diff_from`` is provided, a snapshot of it is taken on entry and used
+      as the baseline for highlighting differences when the block exits.
+    - If ``diff_from`` is not provided, a fresh empty ``AnnData()`` is used as the
+      baseline, so all entries in ``adata`` at the end of the block will appear
+      as “added”.
+    - ``adata`` should be omitted when using the context manager.
+    - On exit, a schematic diff between the snapshot and the current state of
+      ``adata`` is rendered automatically.
     - Exceptions inside the ``with`` block will prevent rendering.
 
     Returns
@@ -86,7 +92,10 @@ def schematic_diagram(
     # ------------------
     # Context mode
     # ------------------
-    if adata is None and diff_from is not None:
+    if adata is None:
+        if diff_from is None:
+            # Use empty AnnData for automatic diffs
+            diff_from = AnnData()
         return _SchematicDiagramContext(diff_from)
 
     # ------------------
