@@ -21,7 +21,7 @@ Small things we need done: (these will move to pull requests soon)
 - [ ] val.viz.schematic_diagram: remove misleading grid lines from all non-X blocks
 - [ ] val.datasets.polis.translate_statements: make `is_translated` more clever (to know when things AREN'T translated)
 - [ ] val.datasets.polis: summarize changes during .load()
-- [ ] val.viz.schematic_diagram: when no diff_from arg provided, assume diff from empty AnnData
+- [x] val.viz.schematic_diagram: when no diff_from arg provided, assume diff from empty AnnData ([#4](https://github.com/patcon/valency-anndata/pull/4))
 - [ ] val.datasets.polis: when above n participants, require allow_large_scrape=True to use convo url
 - [ ] val.datasets.polis: rename adata.uns objects to have `raw_` prefix
 - [ ] val.tools.recipe_polis: document polis pipeline, e.g. flowchart
