@@ -30,3 +30,8 @@ build-backend = "hatchling.build"
 [tool.uv.sources]
 polis-client = { git = "https://github.com/patcon/polis-client" }
 red-dwarf = { git = "https://github.com/polis-community/red-dwarf", rev = "algo-registries" }
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.1.0",
+]
