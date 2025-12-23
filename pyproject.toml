@@ -21,6 +21,7 @@ dependencies = [
     "setuptools<81",
     "red-dwarf",
     "svgwrite>=1.4.3",
+    "pacmap>=0.8.0",
 ]
 
 [build-system]

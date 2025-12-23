@@ -69,6 +69,15 @@ wheels = [
 ]
 
 [[package]]
+name = "annoy"
+version = "1.17.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/38/e321b0e05d8cc068a594279fb7c097efb1df66231c295d482d7ad51b6473/annoy-1.17.3.tar.gz", hash = "sha256:9cbfebefe0a5f843eba29c6be4c84d601f4f41ad4ded0486f1b88c3b07739c15", size = 647460, upload-time = "2023-06-14T16:37:34.152Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/59/c1/dafbf82add040db10e6663da2a719eea9b2ca7a3b4dc79dc42cc130b121b/annoy-1.17.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c33a5d4d344c136c84976bfb2825760142a8bb25335165e24e11c9afbfa8c2e9", size = 57745, upload-time = "2023-06-14T16:37:32.469Z" },
+]
+
+[[package]]
 name = "anyio"
 version = "4.12.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1525,6 +1534,22 @@ wheels = [
 ]
 
 [[package]]
+name = "pacmap"
+version = "0.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "annoy" },
+    { name = "numba" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "scikit-learn" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/40/3686ff721dd60901f5c2c9a1c62e3573fdf84a0be37be047adbc03ef81f3/pacmap-0.8.0.tar.gz", hash = "sha256:1c0c10180e36b77f5e5344d838d020dd9557ac1ca77f0976c2e308643b019084", size = 29067, upload-time = "2025-02-15T19:15:57.576Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/15/5ff2b77b48be04d718e2684c4e707c588183a8c4bbfddf1bd558329281d5/pacmap-0.8.0-py3-none-any.whl", hash = "sha256:c15eff274fd4d4575ba5b42399dc3b71eba80f9131a461d715927e9ae6c812b4", size = 21359, upload-time = "2025-02-15T19:15:55.765Z" },
+]
+
+[[package]]
 name = "pandas"
 version = "2.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2667,6 +2692,7 @@ dependencies = [
     { name = "langevitour" },
     { name = "llvmlite", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'" },
     { name = "nest-asyncio" },
+    { name = "pacmap" },
     { name = "polis-client" },
     { name = "red-dwarf" },
     { name = "scanpy", extra = ["leiden"] },
@@ -2686,6 +2712,7 @@ requires-dist = [
     { name = "langevitour", specifier = ">=0.8.0" },
     { name = "llvmlite", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'", specifier = "<=0.45.1" },
     { name = "nest-asyncio", specifier = ">=1.6.0" },
+    { name = "pacmap", specifier = ">=0.8.0" },
     { name = "polis-client", git = "https://github.com/patcon/polis-client" },
     { name = "red-dwarf", git = "https://github.com/polis-community/red-dwarf?rev=algo-registries" },
     { name = "scanpy", extras = ["leiden"] },
