@@ -22,6 +22,7 @@ import valency_anndata as val
 adata = val.datasets.polis.load("https://pol.is/report/r29kkytnipymd3exbynkd")
 val.viz.schematic_diagram(adata, diff_from=None)
 ```
+<img width="250" alt="Screenshot 2025-12-23 at 12 00 16 AM" src="https://github.com/user-attachments/assets/af10a11a-0146-401e-afff-6567255cf51a" />
 
 ### Running Polis Pipelines
 
@@ -29,17 +30,24 @@ val.viz.schematic_diagram(adata, diff_from=None)
 with val.viz.schematic_diagram(diff_from=adata):
     val.tools.recipe_polis(adata, key_added_pca="X_pca_polis")
 ```
+<img width="250" alt="Screenshot 2025-12-23 at 12 00 39 AM" src="https://github.com/user-attachments/assets/ee6f6136-2883-4ddb-8d74-08faf95be300" />
+
+```py
+val.viz.embedding(adata, basis="pca_polis", colors="kmeans_polis")
+```
+<img width="250" alt="Screenshot 2025-12-23 at 12 00 59 AM" src="https://github.com/user-attachments/assets/7cfe76d5-a03f-4024-bfe1-d152747845e4" />
+
 
 ### Exploring Polis Pipelines
 
 ```py
 val.viz.schematic_diagram(diff_from=adata):
-    .preprocessing.calculate_qc_metrics(pacmap_adata, inplace=True)
+    val.preprocessing.calculate_qc_metrics(pacmap_adata, inplace=True)
 ```
 
 ```py
 val.viz.embedding(adata, basis="pca_polis",
-    ["kmeans_polis", "pct_seen", "pct_agree", "pct_pass"],
+    colors=["kmeans_polis", "pct_seen", "pct_agree", "pct_pass"],
 )
 ```
 
