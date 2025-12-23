@@ -14,6 +14,8 @@ pip install git+https://github.com/patcon/valency-anndata
 
 ## Usage
 
+### Loading Polis Data
+
 ```py
 import valency_anndata as val
 
@@ -21,16 +23,21 @@ adata = val.datasets.polis.load("https://pol.is/report/r29kkytnipymd3exbynkd")
 val.viz.schematic_diagram(adata, diff_from=None)
 ```
 
+### Running Polis Pipelines
+
 ```py
 with val.viz.schematic_diagram(diff_from=adata):
     val.tools.recipe_polis(adata)
 ```
 
 ```py
-val.viz.embedding(adata, basis="pca_polis",
-    color="kmeans_polis",
-)
+with val.viz.schematic_diagram(diff_from=adata):
+   val.viz.embedding(adata, basis="pca_polis",
+      color="kmeans_polis",
+   )
 ```
+
+### Exploring Polis Pipelines
 
 ```py
 val.viz.schematic_diagram(diff_from=adata):
@@ -38,10 +45,12 @@ val.viz.schematic_diagram(diff_from=adata):
 ```
 
 ```py
-val.viz.embedding(adata, basis="pca_polis",
-    color=["kmeans_pacmap", "pct_seen", "pct_agree", "pct_pass"],
+val.scanpy.pl.embedding(adata, basis="pca_polis",
+  color=["kmeans_polis", "pct_seen", "pct_agree", "pct_pass"],
 )
 ```
+
+### Running & Exploring Alternative Pipelines
 
 ```py
 from valency_anndata.tools._polis import _zero_mask, _cluster_mask
