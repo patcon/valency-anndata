@@ -58,7 +58,7 @@ def recipe_polis(
     adata: AnnData,
     *,
     participant_vote_threshold: int = 7,
-    key_added_pca: str = "X_polis",
+    key_added_pca: str = "X_pca_polis",
     key_added_kmeans: str = "kmeans_polis",
     inplace: bool = True,
 ):
