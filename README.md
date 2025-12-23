@@ -30,7 +30,8 @@ val.viz.schematic_diagram(adata, diff_from=None)
 with val.viz.schematic_diagram(diff_from=adata):
     val.tools.recipe_polis(adata, key_added_pca="X_pca_polis")
 ```
-<img height="200" alt="Screenshot 2025-12-23 at 12 00 39 AM" src="https://github.com/user-attachments/assets/ee6f6136-2883-4ddb-8d74-08faf95be300" />
+<img height="200" alt="Screenshot 2025-12-23 at 12 57 42 AM" src="https://github.com/user-attachments/assets/9341387b-0358-4f1e-bb27-3d2cd4beef7d" />
+
 
 ```py
 val.viz.embedding(adata, basis="pca_polis", colors="kmeans_polis")
@@ -44,12 +45,16 @@ val.viz.embedding(adata, basis="pca_polis", colors="kmeans_polis")
 val.viz.schematic_diagram(diff_from=adata):
     val.preprocessing.calculate_qc_metrics(pacmap_adata, inplace=True)
 ```
+<img height="200" alt="Screenshot 2025-12-23 at 12 58 18 AM" src="https://github.com/user-attachments/assets/7ef005b2-f6c3-4c7f-bebb-6c37c9a14290" />
+
 
 ```py
 val.viz.embedding(adata, basis="pca_polis",
     colors=["kmeans_polis", "pct_seen", "pct_agree", "pct_pass"],
 )
 ```
+<img height="200" alt="Screenshot 2025-12-23 at 12 58 50 AM" src="https://github.com/user-attachments/assets/18133b45-cd2b-41a9-a7c5-2101426ba1f9" />
+
 
 ### Running & Exploring Alternative Pipelines
 
@@ -78,12 +83,16 @@ with val.viz.schematic_diagram(diff_from=adata):
         key_added="kmeans_pacmap",
     )
 ```
+<img height="200" alt="Screenshot 2025-12-23 at 12 58 59 AM" src="https://github.com/user-attachments/assets/1fbed051-9a66-4e0e-82a2-f58c839d1a06" />
+
 
 ```py
 val.scanpy.pl.embedding(adata, basis="pacmap",
     color=["kmeans_pacmap", "pct_seen", "pct_agree", "pct_pass"],
 )
 ```
+<img height="200" alt="Screenshot 2025-12-23 at 12 59 09 AM" src="https://github.com/user-attachments/assets/824ec281-d7fa-4f22-9b80-785119cf1529" />
+
 
 For full examples and planned features, see: [`example-usage.ipynb`](./example-usage.ipynb)
 
