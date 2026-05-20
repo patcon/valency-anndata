@@ -49,7 +49,7 @@ def localmap(
 
     import inspect as _inspect
     _localmap_params = _inspect.signature(LocalMAP.__init__).parameters
-    _knn_kwargs = {"knn_backend": "annoy"} if "knn_backend" in _localmap_params else {}
+    _knn_kwargs = {"knn_backend": "voyager"} if "knn_backend" in _localmap_params else {}
 
     estimator = LocalMAP(
         n_components=n_components,
@@ -116,7 +116,7 @@ def pacmap(
 
     import inspect as _inspect
     _pacmap_params = _inspect.signature(PaCMAP.__init__).parameters
-    _knn_kwargs = {"knn_backend": "annoy"} if "knn_backend" in _pacmap_params else {}
+    _knn_kwargs = {"knn_backend": "voyager"} if "knn_backend" in _pacmap_params else {}
 
     estimator = PaCMAP(
         n_components=n_components,
