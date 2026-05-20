@@ -45,6 +45,7 @@ dependencies = [
     "red-dwarf~=0.4.0",
     "svgwrite>=1.4.3",
     "pacmap>=0.8.0",
+    "annoy>=1.17,<2",
     # Keep this <8.0 to keep jupyter-scatter compatible with Google Colab.
     # Strangely, we can go higher, but only if jupyter-scatter is installed before valency-anndata.
     # Note: <8 means we're stuck on a version that triggers a traitlets DeprecationWarning
