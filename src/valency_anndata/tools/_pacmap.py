@@ -47,9 +47,14 @@ def localmap(
 
     from pacmap import LocalMAP
 
+    import inspect as _inspect
+    _localmap_params = _inspect.signature(LocalMAP.__init__).parameters
+    _knn_kwargs = {"knn_backend": "annoy"} if "knn_backend" in _localmap_params else {}
+
     estimator = LocalMAP(
         n_components=n_components,
         n_neighbors=n_neighbors,
+        **_knn_kwargs,
     )
 
     # Get data from layer, optionally filtering by mask_var
@@ -109,9 +114,14 @@ def pacmap(
 
     from pacmap import PaCMAP
 
+    import inspect as _inspect
+    _pacmap_params = _inspect.signature(PaCMAP.__init__).parameters
+    _knn_kwargs = {"knn_backend": "annoy"} if "knn_backend" in _pacmap_params else {}
+
     estimator = PaCMAP(
         n_components=n_components,
         n_neighbors=n_neighbors,
+        **_knn_kwargs,
     )
 
     # Get data from layer, optionally filtering by mask_var
