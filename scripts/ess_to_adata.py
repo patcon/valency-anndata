@@ -46,10 +46,12 @@ HUMAN_VALUES_VARS = [
 # 1=Very much like me (+1), 6=Not like me at all (-1)
 # Missing codes 66/77/88/99 are recoded to NaN by the API before download.
 RUBRICS = {
-    "no_pass":     {1: 1,    2: 1,     3: 1,     4: -1,    5: -1,    6: -1},
-    "narrow_pass": {1: 1,    2: 1,     3: 0,     4: 0,     5: -1,    6: -1},
-    "wide_pass":   {1: 1,    2: 0,     3: 0,     4: 0,     5: 0,     6: -1},
-    "linear":      {1: 1.0,  2: 0.67,  3: 0.33,  4: -0.33, 5: -0.67, 6: -1.0},
+    "no_pass":            {1: 1,    2: 1,     3: 1,     4: -1,    5: -1,    6: -1},
+    "narrow_pass":        {1: 1,    2: 1,     3: 0,     4: 0,     5: -1,    6: -1},
+    "wide_pass":          {1: 1,    2: 0,     3: 0,     4: 0,     5: 0,     6: -1},
+    "fractional_linear":  {1: 1.0,  2: 0.67,  3: 0.33,  4: -0.33, 5: -0.67, 6: -1.0},
+    # tanh(2x) / tanh(2) applied to fractional_linear values
+    "fractional_sigmoid": {1: 1.0,  2: 0.91,  3: 0.60,  4: -0.60, 5: -0.91, 6: -1.0},
 }
 
 
@@ -177,7 +179,8 @@ def main():
         default="narrow_pass",
         help="Vote mapping rubric (default: narrow_pass). "
              "no_pass: 1-3=+1, 4-6=-1. narrow_pass: 1/2=+1, 3/4=0, 5/6=-1. "
-             "wide_pass: 1=+1, 2-5=0, 6=-1. linear: 1.0/0.67/0.33/-0.33/-0.67/-1.0.",
+             "wide_pass: 1=+1, 2-5=0, 6=-1. fractional_linear: 1.0/0.67/0.33/-0.33/-0.67/-1.0. "
+             "fractional_sigmoid: 1.0/0.91/0.60/-0.60/-0.91/-1.0.",
     )
     parser.add_argument(
         "--output",
