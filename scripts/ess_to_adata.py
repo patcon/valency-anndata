@@ -154,6 +154,15 @@ def build_adata(dta_path: Path, rubric: str, round_num: int) -> AnnData:
         "rubric": rubric,
     }
 
+    # Long-format votes table expected by downstream apps (e.g. cartography viewer)
+    votes_long = (
+        votes.reset_index()
+        .rename(columns={"index": "voter-id"})
+        .melt(id_vars="voter-id", var_name="comment-id", value_name="vote")
+        .dropna(subset=["vote"])
+    )
+    adata.uns["votes"] = votes_long
+
     return adata
 
 
