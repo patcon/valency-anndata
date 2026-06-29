@@ -46,8 +46,9 @@ HUMAN_VALUES_VARS = [
 # 1=Very much like me (+1), 6=Not like me at all (-1)
 # Missing codes 66/77/88/99 are recoded to NaN by the API before download.
 RUBRICS = {
-    "lenient": {1: 1, 2: 1, 3: 0, 4: 0, 5: -1, 6: -1},
-    "strict":  {1: 1, 2: 0, 3: 0, 4: 0, 5: 0,  6: -1},
+    "no_pass":     {1: 1, 2: 1, 3: 1, 4: -1, 5: -1, 6: -1},
+    "narrow_pass": {1: 1, 2: 1, 3: 0, 4: 0,  5: -1, 6: -1},
+    "wide_pass":   {1: 1, 2: 0, 3: 0, 4: 0,  5: 0,  6: -1},
 }
 
 
@@ -172,9 +173,9 @@ def main():
     parser.add_argument(
         "--rubric",
         choices=list(RUBRICS),
-        default="lenient",
-        help="Vote mapping rubric (default: lenient). "
-             "lenient: 1/2=+1, 3/4=0, 5/6=-1. strict: 1=+1, 2-5=0, 6=-1.",
+        default="narrow_pass",
+        help="Vote mapping rubric (default: narrow_pass). "
+             "no_pass: 1-3=+1, 4-6=-1. narrow_pass: 1/2=+1, 3/4=0, 5/6=-1. wide_pass: 1=+1, 2-5=0, 6=-1.",
     )
     parser.add_argument(
         "--output",
