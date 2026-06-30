@@ -10,6 +10,78 @@ Usage:
     uv run scripts/ess_to_adata.py --user-id YOUR_USER_ID --rubric strict
 
 Find your ESS user ID at https://ess.sikt.no/en/api after logging in.
+
+# ── ESS11 opinion blocks available beyond human values (PVQ-21) ────────────
+#
+# The dataset has 558 variables. Beyond the 21 PVQ human-values items already
+# implemented here, there are several thematic blocks of opinion/attitude items
+# that could be converted to polis-like votes. Notes on scale types and rubric
+# strategies are documented alongside the variable lists below (OPINION_BLOCKS).
+#
+# Scale types encountered:
+#
+#   A. 1–5 agree/disagree  (1=Agree strongly … 5=Disagree strongly)
+#      → narrow_pass: {1:1, 2:1, 3:0, 4:-1, 5:-1}
+#      Variables: freehms, hmsfmlsh, hmsacld, gincdif, eqparep, eqparlv,
+#                 freinsw, fineqpy, wprtbym, wbrgwrm
+#
+#   B. 1–4 immigration quantity  (1=Allow many … 4=Allow none)  — no midpoint
+#      Two options: split at 2/3 ({1:1,2:1,3:-1,4:-1}), or extremes-only
+#      ({1:1,2:0,3:0,4:-1}). Extremes-only avoids forcing "allow some/few"
+#      to take a side.
+#      Variables: imsmetn, imdfetn, impcntr
+#
+#   C. 0–10 bipolar  (anchored low=negative pole, high=positive pole)
+#      Statement framing determines direction. Threshold:
+#        wide:   {0:-1,1:-1,2:-1,3:-1,4:0,5:0,6:0,7:1,8:1,9:1,10:1}
+#        strict: {0:-1,1:-1,2:-1,3:0,4:0,5:0,6:0,7:0,8:1,9:1,10:1}
+#      Variables: imbgeco (bad→good for economy), imueclt (undermined→enriched),
+#                 imwbcnt (worse→better place), euftf (too far→go further),
+#                 ccrdprs (0=no responsibility→10=full), ppltrst/pplfair/pplhlp,
+#                 trstprl/trstlgl/trstplc/trstplt/trstprt/trstep/trstun,
+#                 stfeco/stfgov/stfdem/stfedu/stfhlth
+#
+#   D. 1–5 frequency  (1=Never … 5=Always)
+#      For hostile-sexism items the high end encodes hostile attitudes, so high→+1:
+#        {1:-1, 2:-1, 3:0, 4:1, 5:1}
+#      Statement e.g. "Women often exaggerate sexual harassment claims" (wexashr).
+#      wlespdm (women paid less for same work) uses the same mapping but is a
+#      factual-perception item, not a hostile-attitude item — keep them separate.
+#      Variables: wsekpwr, weasoff, wexashr, wlespdm
+#
+#   E. 0–6 "bad or good for" gender parity  (0=very bad … 3=neutral … 6=very good)
+#      → {0:-1,1:-1,2:-1,3:0,4:1,5:1,6:1}
+#      Statement: "Having equal numbers of women and men in [context] would be good."
+#      Variables: eqwrkbg, eqpolbg, eqmgmbg, eqpaybg
+#
+#   F. Climate attribution with denial code (special)
+#      1=Entirely natural … 5=Entirely human; 55="don't think it's happening"
+#      Code 55 is ~2-3% of respondents — map to -1 (not NaN) to preserve signal.
+#        {1:-1, 2:-1, 3:0, 4:1, 5:1, 55:-1}
+#      Variable: ccnthum
+#
+#   G. Binary referendum  (1=Remain/Join, 2=Leave/Stay outside)
+#      → {1:1, 2:-1}; codes 33/44/55/65 (not-applicable/DK/refuse/NA) → NaN
+#      Variables: vteurmmb (EU member states), vteubcmb (non-member states)
+#      Note: most respondents have NaN here (country-specific questions).
+#
+# Variables NOT worth converting to votes:
+#   lrscale   — self-placement descriptor, not a statement
+#   admrclc   — experimental group assignment
+#   testjc*/testji* — climate vignette experiment conditions
+#   dscrXXX   — binary checkbox set, not Likert
+#   trstXXX / stfXXX — better as obs covariates for coloring embeddings than
+#                       as vote dimensions; they're mood barometers not debate positions
+#
+# Suggested thematic blocks for multi-block AnnData objects:
+#   "immigration"  → imsmetn, imdfetn, impcntr (B), imbgeco, imueclt, imwbcnt (C)
+#   "climate"      → ccnthum (F), wrclmch (1-5 worry; narrow_pass inverted), ccrdprs (C)
+#   "eu"           → euftf (C), vteurmmb/vteubcmb (G)
+#   "gender"       → wsekpwr,weasoff,wexashr,wlespdm (D), eqparep,eqparlv,
+#                    freinsw,fineqpy,wprtbym (A), eqwrkbg,eqpolbg,eqmgmbg,eqpaybg (E)
+#   "lgbt"         → freehms, hmsfmlsh, hmsacld (A)
+#   "redistribution" → gincdif (A; one var, combine with another block)
+# ───────────────────────────────────────────────────────────────────────────
 """
 
 import argparse
@@ -53,6 +125,105 @@ RUBRICS = {
     # tanh(2x) / tanh(2) applied to fractional_linear values
     "fractional_sigmoid": {1: 1.0,  2: 0.91,  3: 0.60,  4: -0.60, 5: -0.91, 6: -1.0},
 }
+
+# ── Rubrics for other ESS opinion blocks (not yet wired to --block arg) ────
+# These dicts are ready to pass to _apply_rubric() when implementing new blocks.
+
+# Scale A: 1–5 agree/disagree  (1=Agree strongly … 5=Disagree strongly)
+_RUBRIC_AGREE5 = {1: 1, 2: 1, 3: 0, 4: -1, 5: -1}
+
+# Scale B: 1–4 immigration quantity  (1=Allow many … 4=Allow none)
+# extremes-only avoids forcing "allow some/few" to a side
+_RUBRIC_IMMIG4_EXTREMES = {1: 1, 2: 0, 3: 0, 4: -1}
+_RUBRIC_IMMIG4_SPLIT    = {1: 1, 2: 1, 3: -1, 4: -1}
+
+# Scale C: 0–10 bipolar  (low=negative pole, high=positive pole)
+# wide threshold (outer thirds vote, middle third passes)
+_RUBRIC_BIPOLAR10 = {0:-1,1:-1,2:-1,3:-1,4:0,5:0,6:0,7:1,8:1,9:1,10:1}
+
+# Scale D: 1–5 frequency for hostile-sexism items  (1=Never … 5=Always)
+# high frequency = endorses hostile attitude → high scores agree with statement
+_RUBRIC_FREQ5 = {1: -1, 2: -1, 3: 0, 4: 1, 5: 1}
+
+# Scale E: 0–6 "bad or good for"  (0=very bad … 3=neutral … 6=very good)
+_RUBRIC_GOODBAD6 = {0: -1, 1: -1, 2: -1, 3: 0, 4: 1, 5: 1, 6: 1}
+
+# Scale F: climate attribution  (1=natural … 5=human; 55=denies CC is happening)
+# 55 maps to -1 not NaN — deniers are a meaningful ~2-3% sub-group
+_RUBRIC_CLIMATE_ATTRIB = {1: -1, 2: -1, 3: 0, 4: 1, 5: 1, 55: -1}
+
+# Scale G: binary referendum  (1=Remain/Join, 2=Leave/Stay outside)
+# codes 33/44/55/65 (not-applicable / DK / refuse / NA) fall through to NaN
+_RUBRIC_EU_BINARY = {1: 1, 2: -1}
+
+# ── Variable lists for each thematic block ─────────────────────────────────
+
+# immigration: who should be allowed in, and perceived impact
+IMMIGRATION_VARS = {
+    # scale B: statement "We should allow many [type] immigrants"
+    "imsmetn": "Allow many/few immigrants of same race/ethnic group as majority",
+    "imdfetn": "Allow many/few immigrants of different race/ethnic group from majority",
+    "impcntr": "Allow many/few immigrants from poorer countries outside Europe",
+    # scale C: statement framed as "immigration is good for ..."
+    # (0=bad/undermined/worse → 10=good/enriched/better)
+    "imbgeco": "Immigration bad or good for country's economy",
+    "imueclt": "Country's cultural life undermined or enriched by immigrants",
+    "imwbcnt": "Immigrants make country worse or better place to live",
+}
+
+# climate: attribution, worry, personal responsibility
+CLIMATE_VARS = {
+    "ccnthum": "Climate change caused by natural processes, human activity, or both",  # scale F
+    "wrclmch": "How worried about climate change",   # scale A-like (1=not worried → 5=extremely)
+    "ccrdprs": "Personal responsibility to reduce climate change",  # scale C (0–10)
+}
+
+# EU: integration trajectory and hypothetical referendum
+EU_VARS = {
+    "euftf":    "European unification go further or gone too far",  # scale C (0=too far → 10=go further)
+    "vteurmmb": "Would vote Remain/Leave EU (asked in member states)",  # scale G
+    "vteubcmb": "Would vote Join/Stay outside EU (asked in non-member states)",  # scale G
+}
+
+# gender equality: policy support and parity-impact assessment
+GENDER_EQUALITY_VARS = {
+    # scale A: favour/oppose policies
+    "eqparep": "Dividing parliament seats equally between women and men",
+    "eqparlv": "Require both parents to take equal periods of paid parental leave",
+    "freinsw": "Firing employees who make insulting comments directed at women",
+    "fineqpy": "Making businesses pay a fine for paying men more than women for same work",
+    # scale E: "bad or good for [context]" (0=very bad → 6=very good)
+    "eqwrkbg": "Bad or good for family life if equal numbers of women/men are workers",
+    "eqpolbg": "Bad or good for politics if equal numbers of women/men are in politics",
+    "eqmgmbg": "Bad or good for businesses if equal numbers of women/men are managers",
+    "eqpaybg": "Bad or good for economy if women and men receive equal pay",
+    # scale A: benevolent sexism (agree/disagree)
+    "wprtbym": "Women should be protected by men",
+    "wbrgwrm": "Women tend to have better moral sense than men",
+}
+
+# hostile sexism: scale D (1=Never … 5=Always — high frequency = endorses hostile attitude)
+# wlespdm is factual perception (wage gap), not hostile — keep conceptually separate
+HOSTILE_SEXISM_VARS = {
+    "wsekpwr": "How often women seek to gain power by getting control over men",
+    "weasoff": "How often women get easily offended",
+    "wexashr": "How often women exaggerate sexual harassment claims",
+    "wlespdm": "How often women are paid less than men for the same work",  # factual perception
+}
+
+# LGBT rights: scale A (1=Agree strongly … 5=Disagree strongly)
+# hmsfmlsh is phrased such that agreeing = socially conservative (shame); framing matters
+LGBT_VARS = {
+    "freehms": "Gays and lesbians should be free to live life as they wish",
+    "hmsfmlsh": "I would be ashamed if a close family member were gay or lesbian",
+    "hmsacld": "Gay and lesbian couples should have the right to adopt children",
+}
+
+# economic redistribution: scale A
+REDISTRIBUTION_VARS = {
+    "gincdif": "Government should reduce differences in income levels",
+}
+# ───────────────────────────────────────────────────────────────────────────
 
 
 def _get_cache_path(round_num: int) -> Path:
