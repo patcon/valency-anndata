@@ -1,6 +1,6 @@
 [project]
 name = "valency-anndata"
-version = "0.3.0"
+version = "0.4.0"
 description = "Experimental tooling to support notebook analysis of polislike data"
 readme = "README.md"
 authors = [
@@ -29,7 +29,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "anndata>=0.11.4",
+    "anndata>=0.11.4,<0.13.0",
     "googletrans>=4.0.2",
     "nest-asyncio>=1.6.0",
     "platformdirs>=4.0",

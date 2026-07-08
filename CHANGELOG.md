@@ -2,6 +2,10 @@
 
 ## [Unreleased][] (YYYY-MM-DD)
 
+_No changes yet._
+
+## [0.4.0][] (2026-07-08)
+
 ### Added
 - `val.viz.heatmap()` — plot a vote-matrix heatmap with Polis-friendly defaults. Wraps :func:`scanpy.pl.heatmap` with an optional `discrete=True` flag for a labelled segmented colorbar (`"disagree (-1)"`, `"pass (0)"`, `"agree (+1)"`), an optional `groupby` (defaults to index order when omitted), and a built-in `"RdYlGnBright"` colormap ([#92][]).
 - `val.datasets.polis.load()` — new `include_precomputed_groups=True` flag stores Polis server's native group assignments in `adata.obs["kmeans_polis_precomputed"]` (nullable `Int64`) and the raw math dict in `adata.uns["polis_math"]`. Enables easy comparison of pipeline clustering vs. Polis-native grouping ([#93][]).
@@ -9,6 +13,7 @@
 
 ### Fixes
 - `val.pp.rebuild_vote_matrix()` — fix `ValueError` raised when `trim_rule` reduced the matrix shape and the original `layers` or `obsm` entries no longer matched the new dimensions. Mismatched entries are now silently dropped.
+- Pin `anndata<0.13.0` — anndata 0.13.0 introduces breaking changes that are incompatible with this package.
 
 [#92]: https://github.com/patcon/valency-anndata/issues/92
 [#93]: https://github.com/patcon/valency-anndata/issues/93
@@ -129,7 +134,8 @@ Initial release includes:
 
 <!-- Links -->
 
-[Unreleased]: https://github.com/patcon/valency-anndata/compare/v0.3.0...main
+[Unreleased]: https://github.com/patcon/valency-anndata/compare/v0.4.0...main
+[0.4.0]: https://github.com/patcon/valency-anndata/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/patcon/valency-anndata/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/patcon/valency-anndata/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/patcon/valency-anndata/compare/v0.1.0...v0.1.1
