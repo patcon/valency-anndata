@@ -1,9 +1,30 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 from anndata import AnnData
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib import colormaps as _mpl_colormaps, pyplot as _plt
+
+
+def _resolve_obs_mask(adata: AnnData, mask_obs: "np.ndarray | str | None") -> "np.ndarray | None":
+    """Resolve ``mask_obs`` to a boolean array, following scanpy's mask_obs convention."""
+    if mask_obs is None:
+        return None
+    if isinstance(mask_obs, str):
+        if mask_obs not in adata.obs.columns:
+            msg = f"Did not find `adata.obs[{mask_obs!r}]`."
+            raise ValueError(msg)
+        mask_array = adata.obs[mask_obs].to_numpy()
+    else:
+        mask_array = np.asarray(mask_obs)
+        if len(mask_array) != adata.n_obs:
+            msg = "The shape of the mask does not match adata.n_obs."
+            raise ValueError(msg)
+    if not pd.api.types.is_bool_dtype(mask_array.dtype):
+        msg = "mask_obs array must be boolean."
+        raise ValueError(msg)
+    return mask_array
 
 # Register a brighter discrete-friendly variant of RdYlGn.
 # Takes the red and green endpoints directly from RdYlGn, but overrides
@@ -29,6 +50,7 @@ except ValueError:
 def heatmap(
     adata: AnnData,
     groupby: str | None = None,
+    mask_obs: np.ndarray | str | None = None,
     cmap: str = "RdYlGn",
     discrete: bool = False,
     show_labels: bool = True,
@@ -49,6 +71,11 @@ def heatmap(
     groupby
         Column in ``adata.obs`` to group participants by. When ``None``,
         participants are shown in their current index order with no grouping.
+    mask_obs
+        Boolean mask (or name of a boolean ``adata.obs`` column) selecting which
+        participants to include, following scanpy's ``mask_obs`` convention
+        (see e.g. :func:`scanpy.pl.pca`). Useful for excluding participants
+        with no ``groupby`` assignment (e.g. unclustered rows).
     cmap
         Colormap name. Defaults to ``"RdYlGn"``. Also accepts ``"RdYlGnBright"``,
         a custom :class:`~matplotlib.colors.ListedColormap` with fully saturated
@@ -89,6 +116,10 @@ def heatmap(
     """
     import scanpy as sc
     import matplotlib.pyplot as plt
+
+    mask_array = _resolve_obs_mask(adata, mask_obs)
+    if mask_array is not None:
+        adata = adata[mask_array].copy()
 
     _dummy_col = None
     if groupby is None:
