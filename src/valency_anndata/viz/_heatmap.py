@@ -7,22 +7,26 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib import colormaps as _mpl_colormaps, pyplot as _plt
 
 
-def _resolve_obs_mask(adata: AnnData, mask_obs: "np.ndarray | str | None") -> "np.ndarray | None":
-    """Resolve ``mask_obs`` to a boolean array, following scanpy's mask_obs convention."""
-    if mask_obs is None:
+def _resolve_mask(
+    adata: AnnData, mask: "np.ndarray | str | None", dim: str
+) -> "np.ndarray | None":
+    """Resolve ``mask_obs``/``mask_var`` to a boolean array, per scanpy's mask convention."""
+    if mask is None:
         return None
-    if isinstance(mask_obs, str):
-        if mask_obs not in adata.obs.columns:
-            msg = f"Did not find `adata.obs[{mask_obs!r}]`."
+    annot = getattr(adata, dim)
+    n = adata.n_obs if dim == "obs" else adata.n_vars
+    if isinstance(mask, str):
+        if mask not in annot.columns:
+            msg = f"Did not find `adata.{dim}[{mask!r}]`."
             raise ValueError(msg)
-        mask_array = adata.obs[mask_obs].to_numpy()
+        mask_array = annot[mask].to_numpy()
     else:
-        mask_array = np.asarray(mask_obs)
-        if len(mask_array) != adata.n_obs:
-            msg = "The shape of the mask does not match adata.n_obs."
+        mask_array = np.asarray(mask)
+        if len(mask_array) != n:
+            msg = f"The shape of the mask does not match adata.n_{dim}."
             raise ValueError(msg)
     if not pd.api.types.is_bool_dtype(mask_array.dtype):
-        msg = "mask_obs array must be boolean."
+        msg = f"mask_{dim} array must be boolean."
         raise ValueError(msg)
     return mask_array
 
@@ -51,6 +55,7 @@ def heatmap(
     adata: AnnData,
     groupby: str | None = None,
     mask_obs: np.ndarray | str | None = None,
+    mask_var: np.ndarray | str | None = None,
     cmap: str = "RdYlGn",
     discrete: bool = False,
     show_labels: bool = True,
@@ -76,6 +81,11 @@ def heatmap(
         participants to include, following scanpy's ``mask_obs`` convention
         (see e.g. :func:`scanpy.pl.pca`). Useful for excluding participants
         with no ``groupby`` assignment (e.g. unclustered rows).
+    mask_var
+        Boolean mask (or name of a boolean ``adata.var`` column) selecting
+        which statements to include, following scanpy's ``mask_var``
+        convention (see e.g. :func:`scanpy.pp.pca`). Useful for excluding
+        moderated-out statements, e.g. ``mask_var=(adata.var["moderation_state"] >= 1).to_numpy()``.
     cmap
         Colormap name. Defaults to ``"RdYlGn"``. Also accepts ``"RdYlGnBright"``,
         a custom :class:`~matplotlib.colors.ListedColormap` with fully saturated
@@ -117,9 +127,13 @@ def heatmap(
     import scanpy as sc
     import matplotlib.pyplot as plt
 
-    mask_array = _resolve_obs_mask(adata, mask_obs)
-    if mask_array is not None:
-        adata = adata[mask_array].copy()
+    obs_mask_array = _resolve_mask(adata, mask_obs, "obs")
+    var_mask_array = _resolve_mask(adata, mask_var, "var")
+    if obs_mask_array is not None or var_mask_array is not None:
+        adata = adata[
+            obs_mask_array if obs_mask_array is not None else slice(None),
+            var_mask_array if var_mask_array is not None else slice(None),
+        ].copy()
 
     _dummy_col = None
     if groupby is None:
