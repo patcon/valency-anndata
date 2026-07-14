@@ -5,7 +5,7 @@ import webbrowser
 from ._browser import get_default_browser_name
 
 
-def _display_svg_in_notebook(svg_text: str, meta_filename: Optional[str] = None) -> bool:
+def _display_svg_in_jupyter(svg_text: str, meta_filename: Optional[str] = None) -> bool:
     """
     Attempt to display an SVG string in an IPython/Jupyter notebook.
 
@@ -40,13 +40,44 @@ def _display_svg_in_notebook(svg_text: str, meta_filename: Optional[str] = None)
     display(SVG(svg_text), metadata=metadata)
     return True
 
+def _display_svg_in_marimo(svg_text: str) -> bool:
+    """
+    Attempt to display an SVG string inline in a marimo notebook.
+
+    Parameters
+    ----------
+    svg_text : str
+        The raw SVG content to display.
+
+    Returns
+    -------
+    bool
+        True if the SVG was successfully displayed in a marimo notebook,
+        False otherwise.
+
+    Notes
+    -----
+    - Requires a running marimo kernel. Returns False if marimo is not
+      installed or not currently running a notebook.
+    """
+    try:
+        import marimo
+    except ImportError:
+        return False
+
+    if not marimo.running_in_notebook():
+        return False
+
+    marimo.output.replace(marimo.Html(svg_text))
+    return True
+
 def _show_svg(dwg, filename: Optional[str] = None) -> Optional[str]:
     """
     Display an SVG drawing in the best available environment.
 
-    The function first attempts to render the SVG inline in an IPython/Jupyter
-    notebook. If that fails, it falls back to writing the SVG to a temporary
-    file and opening it in a web browser.
+    The function first attempts to render the SVG inline in a marimo or
+    IPython/Jupyter notebook. If that fails, it falls back to writing the
+    SVG to a temporary file and opening it in a web browser.
 
     Parameters
     ----------
@@ -65,8 +96,10 @@ def _show_svg(dwg, filename: Optional[str] = None) -> Optional[str]:
     """
     svg_text = dwg.tostring()
 
-    # Try inline notebook display first
-    if _display_svg_in_notebook(svg_text, meta_filename=filename):
+    # Try inline notebook display first (marimo, then IPython/Jupyter)
+    if _display_svg_in_marimo(svg_text):
+        return None
+    if _display_svg_in_jupyter(svg_text, meta_filename=filename):
         return None
 
     # Derive a friendly prefix from the provided filename
