@@ -2,8 +2,12 @@
 
 ## [Unreleased][] (YYYY-MM-DD)
 
+### Added
+- `val.viz.heatmap()` — new `mask_obs` and `mask_var` parameters for subsetting the plotted matrix, following scanpy's mask convention (boolean array or the name of a boolean `adata.obs`/`adata.var` column). Useful for excluding participants with no `groupby` assignment (e.g. unclustered rows) and moderated-out statements.
+
 ### Fixes
 - `val.viz.schematic_diagram()` — fix display in marimo notebooks. It previously only detected Jupyter/IPython, so in marimo it fell through to `webbrowser.open()`, which raised `webbrowser.Error` when no GUI browser was reachable. Now detects marimo via `marimo.running_in_notebook()` and displays inline via `marimo.output.replace(marimo.Html(...))`.
+- `val.datasets.japanchoice()` — the source pol.is conversations were taken down; loading now pulls CSV exports archived on [huggingface.co/patcon](https://huggingface.co/patcon) instead. `"2025_diversity_human_rights"` and `"2025_education_children_old_age"` have no archive and now raise a clear `ValueError` instead of silently failing against a dead pol.is URL.
 
 ## [0.4.0][] (2026-07-08)
 
