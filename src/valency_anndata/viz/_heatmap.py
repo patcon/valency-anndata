@@ -30,6 +30,7 @@ def _resolve_mask(
         raise ValueError(msg)
     return mask_array
 
+
 # Register a brighter discrete-friendly variant of RdYlGn.
 # Takes the red and green endpoints directly from RdYlGn, but overrides
 # the muted midpoint yellow with a fully saturated yellow (#ffff00).

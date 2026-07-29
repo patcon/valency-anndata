@@ -106,7 +106,9 @@ def japanchoice(
         )
 
     if topic not in _TOPIC_SOURCES:
-        raise ValueError(f"Unknown topic {topic!r}. Must be one of: {list(JapanChoiceTopic.__args__)}")
+        raise ValueError(
+            f"Unknown topic {topic!r}. Must be one of: {list(JapanChoiceTopic.__args__)}"
+        )
     source = _TOPIC_SOURCES[topic]
 
     adata = val.datasets.polis.load(source, translate_to=translate_to, **kwargs)
