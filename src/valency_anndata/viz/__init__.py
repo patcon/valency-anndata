@@ -1,8 +1,8 @@
 from scanpy.plotting._tools.scatterplots import (
-    embedding,
     pca,
     umap,
 )
+from ._embedding import embedding
 from ._langevitour import langevitour
 from ._voter_vignette import voter_vignette_browser
 from ._jupyter_scatter import jscatter
