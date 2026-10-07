@@ -4,8 +4,10 @@
 
 ### Added
 - `val.viz.heatmap()` — new `mask_obs` and `mask_var` parameters for subsetting the plotted matrix, following scanpy's mask convention (boolean array or the name of a boolean `adata.obs`/`adata.var` column). Useful for excluding participants with no `groupby` assignment (e.g. unclustered rows) and moderated-out statements.
+- `val.viz.voter_vignette_browser()` — new `variant` parameter, defaulting to the new `"v2"`: a TypeScript widget mounted via [anywidget](https://anywidget.dev). Scroll to zoom and drag to pan the timeline down to second-level resolution, hover a vote marker to see the statement voted on (click to pin it, then copy the text or open it in Google Translate), and click an authored statement to zoom to the votes around it. A searchable participant picker lists everyone with vote/statement counts, All/Voters/Commenters filters, sorting, and ◀ ▶ stepping. Pass `variant="v1"` for the original matplotlib version. v2 accepts statement `created_date` in either seconds or milliseconds.
 
 ### Fixes
+- `[polis2]` extra — require `tokenizers>=0.14`. Fresh installs could resolve to `transformers` 4.12 / `tokenizers` 0.10.3, which has no wheels and fails to compile from source on current Rust toolchains (broke the docs CI build).
 - `val.viz.schematic_diagram()` — fix display in marimo notebooks. It previously only detected Jupyter/IPython, so in marimo it fell through to `webbrowser.open()`, which raised `webbrowser.Error` when no GUI browser was reachable. Now detects marimo via `marimo.running_in_notebook()` and displays inline via `marimo.output.replace(marimo.Html(...))`.
 - `val.datasets.japanchoice()` — the source pol.is conversations were taken down; loading now pulls CSV exports archived on [huggingface.co/patcon](https://huggingface.co/patcon) instead. `"2025_diversity_human_rights"` and `"2025_education_children_old_age"` have no archive and now raise a clear `ValueError` instead of silently failing against a dead pol.is URL.
 

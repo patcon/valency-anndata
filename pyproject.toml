@@ -52,6 +52,8 @@ dependencies = [
     "ipywidgets<8",
     "huggingface-hub",
     "jupyter-scatter>=0.22.2",
+    # Mounts the TypeScript widgets bundled from js/ (e.g. voter_vignette_browser v2).
+    "anywidget>=0.9",
 ]
 
 [project.urls]
@@ -76,6 +78,9 @@ dev = [
 ]
 polis2 = [
     "polismath-commentgraph",
+    # Without a floor, uv can backtrack to transformers 4.12 / tokenizers 0.10.3,
+    # which has no wheels and fails to compile on current Rust. 0.14+ ships abi3 wheels.
+    "tokenizers>=0.14",
 ]
 
 [build-system]

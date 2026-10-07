@@ -1,6 +1,39 @@
+from typing import Literal
+
 from anndata import AnnData
 
-def voter_vignette_browser(adata: AnnData) -> None:
+
+def _prepare_votes_df(adata: AnnData):
+    """Copy of ``adata.uns["votes"]`` with string voter ids and a unit sanity check."""
+    import warnings
+
+    votes_df = adata.uns["votes"].copy()
+    votes_df["voter-id"] = votes_df["voter-id"].astype(str)
+
+    # Heuristic check: votes should be seconds, median ~1e9–1e10
+    votes_median = votes_df["timestamp"].median()
+    if votes_median > 1e11:  # looks too large for seconds
+        warnings.warn(
+            f"Median timestamp in votes is {votes_median}, which seems too large. "
+            "Expected seconds. If these are milliseconds, divide by 1000."
+        )
+    return votes_df
+
+
+def _user_lists(adata: AnnData, votes_df):
+    """Return (all_voters, all_commenters, all_users) as arrays of string ids."""
+    import numpy as np
+
+    all_voters = votes_df["voter-id"].unique()
+    all_commenters = adata.var["participant_id_authored"].dropna().astype(str).unique()
+    all_users = np.unique(np.concatenate([all_voters, all_commenters]))
+    return all_voters, all_commenters, all_users
+
+
+def voter_vignette_browser(
+    adata: AnnData,
+    variant: Literal["v1", "v2"] = "v2",
+):
     """
     Interactive browser for quickly surveying many voting timelines of random
     participants alongside statements they authored.
@@ -10,6 +43,19 @@ def voter_vignette_browser(adata: AnnData) -> None:
     adata:
         An AnnData object loaded from a Polis conversation.<br/>
         (See Assumptions below)
+    variant:
+        Which implementation to render.
+
+        - `"v2"` (default): an [anywidget](https://anywidget.dev)-based timeline
+          that you can zoom and pan, with hover tooltips showing the statement
+          behind each vote.
+        - `"v1"`: the original ipywidgets controls with a static matplotlib plot.
+
+    Returns
+    -------
+    For `"v2"`, the widget object, which Jupyter displays when it is the last
+    expression in a cell. Setting `widget.user_id = "<id>"` switches the selected
+    participant. None for `"v1"`.
 
     Assumptions
     -----------
@@ -21,18 +67,29 @@ def voter_vignette_browser(adata: AnnData) -> None:
 
     - Statements are stored in `adata.var` with columns:
         - `participant_id_authored`
-        - `created_date` (milliseconds since epoch)
+        - `created_date` (seconds or milliseconds since epoch; `"v1"` expects
+          milliseconds)
         - `content`
         - `moderation_state` (optional, -1/0/1)
 
     Behavior
     --------
 
-    - Renders a dropdown to select a user, with buttons for random voter or commenter.
     - Plots votes over time with colors (red/neutral/green).
     - Draws vertical bars for authored statements with moderation-state coloring.
     - Displays statements below the plot in submission order.
-    - Warns if vote or statement timestamps appear out of expected ranges.
+    - Buttons pick a random voter or commenter.
+    - Warns if vote timestamps appear out of the expected range.
+
+    With `variant="v2"` (default), additionally:
+
+    - A searchable participant picker lists everyone with vote/statement counts,
+      All/Voters/Commenters filters, sorting, and ◀ ▶ buttons to step through.
+    - Scroll to zoom and drag to pan the timeline, down to second-level resolution.
+      Double-click or press "Reset zoom" to return to the full range.
+    - Hover a vote marker to see the statement voted on, the vote, and its time.
+      Click to pin it, then copy the text or open it in Google Translate.
+    - Click an authored statement in the list to zoom to the votes around it.
 
     Examples
     --------
@@ -43,10 +100,22 @@ def voter_vignette_browser(adata: AnnData) -> None:
     val.viz.voter_vignette_browser(adata)
     ```
     <img src="../../assets/documentation-examples/viz--voter-vignette-browser.png">
+
+    Use the original matplotlib version instead.
+
+    ```py
+    val.viz.voter_vignette_browser(adata, variant="v1")
+    ```
     """
+    if variant == "v2":
+        from ._voter_vignette_v2 import VoterVignetteWidget
+
+        return VoterVignetteWidget(adata)
+    if variant != "v1":
+        raise ValueError(f"Unknown variant {variant!r}; expected 'v1' or 'v2'.")
+
     import random
     import pandas as pd
-    import numpy as np
     import matplotlib.pyplot as plt
     from ipywidgets import widgets
     from IPython.display import display, Markdown
@@ -55,17 +124,7 @@ def voter_vignette_browser(adata: AnnData) -> None:
     # -----------------------------
     # Prepare votes dataframe
     # -----------------------------
-    votes_df = adata.uns["votes"].copy()
-    votes_df["voter-id"] = votes_df["voter-id"].astype(str)
-
-    # Heuristic check: votes should be seconds, median ~1e9–1e10
-    votes_median = votes_df["timestamp"].median()
-    if votes_median > 1e11:  # looks too large for seconds
-        warnings.warn(
-            f"Median timestamp in votes is {votes_median}, which seems too large. "
-            "Expected seconds. If these are milliseconds, divide by 1000."
-        )
-
+    votes_df = _prepare_votes_df(adata)
     votes_df["timestamp"] = pd.to_datetime(votes_df["timestamp"], unit="s")
 
     # -----------------------------
@@ -187,9 +246,7 @@ def voter_vignette_browser(adata: AnnData) -> None:
     # -----------------------------
     # User selection widgets
     # -----------------------------
-    all_voters = votes_df["voter-id"].unique()
-    all_commenters = adata.var["participant_id_authored"].dropna().astype(str).unique()
-    all_users = np.unique(np.concatenate([all_voters, all_commenters]))
+    all_voters, all_commenters, all_users = _user_lists(adata, votes_df)
     initial_user = random.choice(all_commenters.tolist())
 
     user_dropdown = widgets.Dropdown(

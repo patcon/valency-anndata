@@ -23,3 +23,6 @@ site/
 # Never version-control an h5ad file export
 *.h5ad
 exports/
+
+# JS widget sources (built bundles in src/valency_anndata/viz/static/ ARE committed)
+js/node_modules/
