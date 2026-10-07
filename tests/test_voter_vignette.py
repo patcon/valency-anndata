@@ -80,6 +80,20 @@ def test_changing_user_id_updates_payload(widget):
     widget.user_id = "0"
 
 
+def test_user_ids_sorted_numerically(widget):
+    ids = [int(u) for u in widget.all_users]
+    assert ids == sorted(ids)
+
+
+def test_user_counts_align_with_users(real_adata, widget):
+    n = len(widget.all_users)
+    assert len(widget.user_vote_counts) == len(widget.user_statement_counts) == n
+    assert sum(widget.user_vote_counts) == len(real_adata.uns["votes"])
+    assert sum(widget.user_statement_counts) == (
+        real_adata.var["participant_id_authored"].notna().sum()
+    )
+
+
 def test_user_lists_are_synced(widget):
     assert widget.commenters and set(widget.commenters) <= set(widget.all_users)
     assert set(widget.voters) <= set(widget.all_users)

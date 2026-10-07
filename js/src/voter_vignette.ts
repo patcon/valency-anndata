@@ -5,6 +5,7 @@ import { select } from "d3-selection";
 import { utcDay, utcMinute, utcMonth, utcYear } from "d3-time";
 import { utcFormat } from "d3-time-format";
 import { zoom as d3zoom, zoomIdentity, zoomTransform, type ZoomTransform } from "d3-zoom";
+import { UserPicker } from "./user_picker";
 import "./voter_vignette.css";
 
 interface Vote {
@@ -30,8 +31,8 @@ interface UserData {
 
 interface Model {
   all_users: string[];
-  voters: string[];
-  commenters: string[];
+  user_vote_counts: number[];
+  user_statement_counts: number[];
   user_id: string;
   user_data: UserData;
 }
@@ -117,18 +118,11 @@ function render({ model, el: root }: RenderProps<Model>) {
 
   // ── Header: user picker + random buttons ──────────────────────────────
   const header = el("div", "vv-header");
-  const label = el("label", "vv-label", "User ID:");
-  const input = el("input", "vv-input");
-  const listId = `vv-users-${Math.random().toString(36).slice(2)}`;
-  input.setAttribute("list", listId);
-  input.placeholder = "type or pick a user id";
-  const datalist = el("datalist");
-  datalist.id = listId;
+  const picker = new UserPicker((id) => setUser(id));
   const randomVoterBtn = el("button", "vv-btn", "Random voter");
   const randomCommenterBtn = el("button", "vv-btn", "Random commenter");
   const resetBtn = el("button", "vv-btn", "Reset zoom");
-  label.append(input);
-  header.append(label, datalist, randomVoterBtn, randomCommenterBtn, resetBtn);
+  header.append(picker.root, randomVoterBtn, randomCommenterBtn, resetBtn);
 
   const title = el("div", "vv-title");
 
@@ -450,18 +444,16 @@ function render({ model, el: root }: RenderProps<Model>) {
   }
 
   function syncUsers() {
-    datalist.replaceChildren(
-      ...model.get("all_users").map((id) => {
-        const opt = document.createElement("option");
-        opt.value = id;
-        return opt;
-      }),
+    picker.setUsers(
+      model.get("all_users"),
+      model.get("user_vote_counts"),
+      model.get("user_statement_counts"),
     );
   }
 
   function syncData() {
     data = model.get("user_data") ?? { user_id: "", votes: [], statements: [] };
-    input.value = model.get("user_id");
+    picker.setCurrent(model.get("user_id"));
     hovered = new Set();
     tooltip.hidden = true;
     setDomain();
@@ -471,18 +463,15 @@ function render({ model, el: root }: RenderProps<Model>) {
     resetZoom(); // fires the zoom handler, which draws
   }
 
-  input.addEventListener("change", () => {
-    const id = input.value.trim();
-    if (model.get("all_users").includes(id)) setUser(id);
-    else input.value = model.get("user_id");
-  });
-  randomVoterBtn.addEventListener("click", () => pick(model.get("voters")));
-  randomCommenterBtn.addEventListener("click", () => pick(model.get("commenters")));
+  randomVoterBtn.addEventListener("click", () => pick(picker.ids("voters")));
+  randomCommenterBtn.addEventListener("click", () => pick(picker.ids("commenters")));
   resetBtn.addEventListener("click", resetZoom);
 
   const onUsers = () => syncUsers();
   const onData = () => syncData();
   model.on("change:all_users", onUsers);
+  model.on("change:user_vote_counts", onUsers);
+  model.on("change:user_statement_counts", onUsers);
   model.on("change:user_data", onData);
 
   // Re-layout on resize, keeping the current zoom transform.
@@ -505,7 +494,10 @@ function render({ model, el: root }: RenderProps<Model>) {
   return () => {
     resize.disconnect();
     document.removeEventListener("keydown", onKeydown);
+    picker.destroy();
     model.off("change:all_users", onUsers);
+    model.off("change:user_vote_counts", onUsers);
+    model.off("change:user_statement_counts", onUsers);
     model.off("change:user_data", onData);
   };
 }

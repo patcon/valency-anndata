@@ -113,21 +113,33 @@ def _prepare_statements(adata: AnnData) -> pd.DataFrame:
     return statements
 
 
+def _id_sort_key(user_id: str):
+    """Sort numeric ids numerically ("2" before "10"), then any others as text."""
+    return (0, int(user_id), "") if user_id.isdigit() else (1, 0, user_id)
+
+
 class VoterVignetteWidget(anywidget.AnyWidget):
     """Zoomable voter timeline. Created via ``voter_vignette_browser(adata, variant="v2")``."""
 
     _esm = _STATIC / "voter_vignette.js"
     _css = _STATIC / "voter_vignette.css"
 
+    # Parallel arrays (one entry per participant, ids sorted numerically) feeding
+    # the user picker's counts, filters and sorting.
     all_users = traitlets.List(traitlets.Unicode()).tag(sync=True)
-    voters = traitlets.List(traitlets.Unicode()).tag(sync=True)
-    commenters = traitlets.List(traitlets.Unicode()).tag(sync=True)
+    user_vote_counts = traitlets.List(traitlets.Int()).tag(sync=True)
+    user_statement_counts = traitlets.List(traitlets.Int()).tag(sync=True)
     user_id = traitlets.Unicode("").tag(sync=True)
     user_data = traitlets.Dict().tag(sync=True)
 
     def __init__(self, adata: AnnData, user_id: str | None = None, **kwargs):
         votes_df = _prepare_votes_df(adata)
         all_voters, all_commenters, all_users = _user_lists(adata, votes_df)
+        users = sorted(all_users.tolist(), key=_id_sort_key)
+        vote_counts = votes_df["voter-id"].value_counts()
+        statement_counts = (
+            adata.var["participant_id_authored"].dropna().astype(str).value_counts()
+        )
 
         votes_df["t_ms"] = _to_epoch_ms(votes_df["timestamp"])
         self._votes_df = votes_df[["voter-id", "comment-id", "vote", "t_ms"]]
@@ -140,13 +152,23 @@ class VoterVignetteWidget(anywidget.AnyWidget):
             user_id = random.choice(pool.tolist()) if len(pool) else ""
 
         super().__init__(
-            all_users=sorted(all_users.tolist()),
-            voters=sorted(all_voters.tolist()),
-            commenters=sorted(all_commenters.tolist()),
+            all_users=users,
+            user_vote_counts=[int(vote_counts.get(u, 0)) for u in users],
+            user_statement_counts=[int(statement_counts.get(u, 0)) for u in users],
             **kwargs,
         )
         # Set after init so the observer below fills user_data.
         self.user_id = str(user_id)
+
+    @property
+    def voters(self) -> list[str]:
+        """Participants with at least one vote."""
+        return [u for u, n in zip(self.all_users, self.user_vote_counts) if n]
+
+    @property
+    def commenters(self) -> list[str]:
+        """Participants who authored at least one statement."""
+        return [u for u, n in zip(self.all_users, self.user_statement_counts) if n]
 
     @traitlets.observe("user_id")
     def _on_user_id(self, change):
