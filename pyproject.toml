@@ -52,6 +52,8 @@ dependencies = [
     "ipywidgets<8",
     "huggingface-hub",
     "jupyter-scatter>=0.22.2",
+    # Mounts the TypeScript widgets bundled from js/ (e.g. voter_vignette_browser v2).
+    "anywidget>=0.9",
 ]
 
 [project.urls]
