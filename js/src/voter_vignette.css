@@ -232,3 +232,53 @@
   content: " (moderated out)";
   color: var(--vv-disagree);
 }
+
+/* Pinned tooltip: interactive, selectable, with copy/translate actions. */
+.vv-tooltip.is-pinned {
+  pointer-events: auto;
+  user-select: text;
+  max-height: 60%;
+  overflow-y: auto;
+  padding-right: 22px;
+}
+
+.vv-tip-hint {
+  margin-top: 6px;
+  color: var(--vv-muted);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.vv-tip-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.vv-tip-btn {
+  font: inherit;
+  font-size: 11px;
+  color: var(--vv-fg);
+  background: var(--vv-surface);
+  border: 1px solid var(--vv-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.vv-tip-btn:hover {
+  border-color: var(--vv-muted);
+}
+
+.vv-tip-close {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  border: none;
+  background: none;
+  color: var(--vv-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}

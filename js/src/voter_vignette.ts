@@ -84,6 +84,34 @@ function formatDuration(ms: number): string {
   return `${Math.floor(hours / 24)} days`;
 }
 
+function googleTranslateUrl(text: string): string {
+  const target = (navigator.language || "en").split("-")[0];
+  const params = new URLSearchParams({ sl: "auto", tl: target, op: "translate", text });
+  return `https://translate.google.com/?${params}`;
+}
+
+/** Copy to clipboard, falling back to execCommand where the Clipboard API is blocked (e.g. iframes). */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.append(ta);
+    ta.select();
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    } finally {
+      ta.remove();
+    }
+  }
+}
+
 function render({ model, el: root }: RenderProps<Model>) {
   root.classList.add("vv-root");
 
@@ -115,7 +143,7 @@ function render({ model, el: root }: RenderProps<Model>) {
   const hint = el(
     "div",
     "vv-hint",
-    "Scroll to zoom · drag to pan · double-click to reset · hover a vote to see its statement",
+    "Scroll to zoom · drag to pan · double-click to reset · hover a vote to see its statement · click to pin, copy or translate",
   );
 
   root.append(header, title, chart, legend, hint, list);
@@ -135,9 +163,11 @@ function render({ model, el: root }: RenderProps<Model>) {
   let width = 0;
   let data: UserData = { user_id: "", votes: [], statements: [] };
   let hovered = new Set<Vote>();
+  let pinned = false; // tooltip pinned by a click (see below)
 
   const zoom = d3zoom<SVGSVGElement, unknown>().on("zoom", (event) => {
     x = (event.transform as ZoomTransform).rescaleX(x0);
+    if (pinned) unpin();
     draw();
   });
   svg.call(zoom).on("dblclick.zoom", null).on("dblclick", () => resetZoom());
@@ -233,9 +263,12 @@ function render({ model, el: root }: RenderProps<Model>) {
       .attr("r", 5);
   }
 
-  // ── Hover: nearest votes within a small radius, else a statement line ──
-  function showTooltip(html: HTMLElement[], px: number, py: number) {
-    tooltip.replaceChildren(...html);
+  // ── Hover / pin: nearest votes within a small radius, else a statement line ──
+  // Hovering shows a transient tooltip; clicking pins it so its text can be
+  // selected, copied, or sent to Google Translate.
+
+  function showTooltip(rows: HTMLElement[], px: number, py: number) {
+    tooltip.replaceChildren(...rows);
     tooltip.hidden = false;
     const cw = chart.clientWidth;
     const tw = tooltip.offsetWidth;
@@ -245,6 +278,7 @@ function render({ model, el: root }: RenderProps<Model>) {
   }
 
   function hideTooltip() {
+    if (pinned) return;
     tooltip.hidden = true;
     if (hovered.size) {
       hovered = new Set();
@@ -252,7 +286,28 @@ function render({ model, el: root }: RenderProps<Model>) {
     }
   }
 
-  function voteRow(v: Vote): HTMLElement {
+  function unpin() {
+    pinned = false;
+    tooltip.classList.remove("is-pinned");
+    hideTooltip();
+  }
+
+  function textActions(text: string): HTMLElement {
+    const actions = el("div", "vv-tip-actions");
+    const copyBtn = el("button", "vv-tip-btn", "Copy");
+    copyBtn.addEventListener("click", async () => {
+      copyBtn.textContent = (await copyText(text)) ? "Copied ✓" : "Copy failed — select text";
+      setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
+    });
+    const translate = el("a", "vv-tip-btn", "Translate ↗");
+    translate.href = googleTranslateUrl(text);
+    translate.target = "_blank";
+    translate.rel = "noopener noreferrer";
+    actions.append(copyBtn, translate);
+    return actions;
+  }
+
+  function voteRow(v: Vote, withActions: boolean): HTMLElement {
     const row = el("div", "vv-tip-row");
     const head = el("div", "vv-tip-head");
     head.append(
@@ -263,13 +318,25 @@ function render({ model, el: root }: RenderProps<Model>) {
     if (v.moderation_state === -1) {
       row.append(el("div", "vv-tip-note", "This statement was moderated out."));
     }
+    if (withActions && v.content) row.append(textActions(v.content));
     return row;
   }
 
-  svg.on("pointermove", (event: PointerEvent) => {
-    if (event.buttons) return hideTooltip(); // dragging
-    const [mx, my] = [event.offsetX, event.offsetY];
-    if (mx < MARGIN.left || mx > MARGIN.left + plotWidth()) return hideTooltip();
+  function statementRow(s: Statement, withActions: boolean): HTMLElement {
+    const row = el("div", "vv-tip-row");
+    const head = el("div", "vv-tip-head");
+    head.append(
+      el("span", `vv-chip mod-${MOD_CLASS[s.moderation_state ?? 0]}`, "Authored"),
+      el("span", "vv-tip-meta", ` #${s.statement_id} · ${fmtFull(new Date(s.t))}`),
+    );
+    row.append(head, el("div", "vv-tip-text", s.content ?? ""));
+    if (withActions && s.content) row.append(textActions(s.content));
+    return row;
+  }
+
+  /** Tooltip rows for whatever is under the pointer, or null if nothing is. */
+  function tooltipAt(mx: number, my: number, withActions: boolean): HTMLElement[] | null {
+    if (mx < MARGIN.left || mx > MARGIN.left + plotWidth()) return null;
 
     const near = data.votes
       .map((v) => ({ v, d: Math.hypot(x(v.t) - mx, y(v.vote) - my) }))
@@ -279,32 +346,53 @@ function render({ model, el: root }: RenderProps<Model>) {
     if (near.length) {
       hovered = new Set(near.map(({ v }) => v));
       draw();
-      const rows = near.slice(0, MAX_TOOLTIP_VOTES).map(({ v }) => voteRow(v));
+      const rows = near.slice(0, MAX_TOOLTIP_VOTES).map(({ v }) => voteRow(v, withActions));
       if (near.length > MAX_TOOLTIP_VOTES) {
         rows.push(el("div", "vv-tip-note", `+${near.length - MAX_TOOLTIP_VOTES} more — zoom in to separate`));
       }
-      return showTooltip(rows, mx, my);
+      if (!withActions) rows.push(el("div", "vv-tip-hint", "Click to pin · copy · translate"));
+      return rows;
     }
 
+    if (hovered.size) {
+      hovered = new Set();
+      draw();
+    }
     const stmt = data.statements.find((s) => Math.abs(x(s.t) - mx) <= 4);
     if (stmt) {
-      if (hovered.size) {
-        hovered = new Set();
-        draw();
-      }
-      const row = el("div", "vv-tip-row");
-      const head = el("div", "vv-tip-head");
-      head.append(
-        el("span", `vv-chip mod-${MOD_CLASS[stmt.moderation_state ?? 0]}`, "Authored"),
-        el("span", "vv-tip-meta", ` #${stmt.statement_id} · ${fmtFull(new Date(stmt.t))}`),
-      );
-      row.append(head, el("div", "vv-tip-text", stmt.content ?? ""));
-      return showTooltip([row], mx, my);
+      const rows = [statementRow(stmt, withActions)];
+      if (!withActions) rows.push(el("div", "vv-tip-hint", "Click to pin · copy · translate"));
+      return rows;
     }
+    return null;
+  }
 
-    hideTooltip();
+  svg.on("pointermove", (event: PointerEvent) => {
+    if (pinned) return;
+    if (event.buttons) return hideTooltip(); // dragging
+    const rows = tooltipAt(event.offsetX, event.offsetY, false);
+    if (rows) showTooltip(rows, event.offsetX, event.offsetY);
+    else hideTooltip();
   });
   svg.on("pointerleave", hideTooltip);
+
+  // d3-zoom suppresses the click that ends a drag, so this only fires on real clicks.
+  svg.on("click", (event: MouseEvent) => {
+    pinned = false;
+    const rows = tooltipAt(event.offsetX, event.offsetY, true);
+    if (!rows) return unpin();
+    const close = el("button", "vv-tip-close", "×");
+    close.title = "Close (Esc)";
+    close.addEventListener("click", unpin);
+    showTooltip([close, ...rows], event.offsetX, event.offsetY);
+    pinned = true;
+    tooltip.classList.add("is-pinned");
+  });
+
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && pinned) unpin();
+  };
+  document.addEventListener("keydown", onKeydown);
 
   // ── Text sections ──────────────────────────────────────────────────────
   function focusOn(t: number) {
@@ -416,6 +504,7 @@ function render({ model, el: root }: RenderProps<Model>) {
 
   return () => {
     resize.disconnect();
+    document.removeEventListener("keydown", onKeydown);
     model.off("change:all_users", onUsers);
     model.off("change:user_data", onData);
   };

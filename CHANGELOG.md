@@ -4,7 +4,7 @@
 
 ### Added
 - `val.viz.heatmap()` — new `mask_obs` and `mask_var` parameters for subsetting the plotted matrix, following scanpy's mask convention (boolean array or the name of a boolean `adata.obs`/`adata.var` column). Useful for excluding participants with no `groupby` assignment (e.g. unclustered rows) and moderated-out statements.
-- `val.viz.voter_vignette_browser()` — new `variant="v2"` option: a TypeScript widget mounted via [anywidget](https://anywidget.dev). Scroll to zoom and drag to pan the timeline down to second-level resolution, hover a vote marker to see the statement voted on, and click an authored statement to zoom to the votes around it. `variant="v1"` (the matplotlib version) remains the default. v2 accepts statement `created_date` in either seconds or milliseconds.
+- `val.viz.voter_vignette_browser()` — new `variant="v2"` option: a TypeScript widget mounted via [anywidget](https://anywidget.dev). Scroll to zoom and drag to pan the timeline down to second-level resolution, hover a vote marker to see the statement voted on (click to pin it, then copy the text or open it in Google Translate), and click an authored statement to zoom to the votes around it. `variant="v1"` (the matplotlib version) remains the default. v2 accepts statement `created_date` in either seconds or milliseconds.
 
 ### Fixes
 - `val.viz.schematic_diagram()` — fix display in marimo notebooks. It previously only detected Jupyter/IPython, so in marimo it fell through to `webbrowser.open()`, which raised `webbrowser.Error` when no GUI browser was reachable. Now detects marimo via `marimo.running_in_notebook()` and displays inline via `marimo.output.replace(marimo.Html(...))`.
