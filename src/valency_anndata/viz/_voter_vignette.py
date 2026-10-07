@@ -32,7 +32,7 @@ def _user_lists(adata: AnnData, votes_df):
 
 def voter_vignette_browser(
     adata: AnnData,
-    variant: Literal["v1", "v2"] = "v1",
+    variant: Literal["v1", "v2"] = "v2",
 ):
     """
     Interactive browser for quickly surveying many voting timelines of random
@@ -46,15 +46,16 @@ def voter_vignette_browser(
     variant:
         Which implementation to render.
 
-        - `"v1"` (default): ipywidgets controls with a static matplotlib plot.
-        - `"v2"`: an [anywidget](https://anywidget.dev)-based timeline that you can
-          zoom and pan, with hover tooltips showing the statement behind each vote.
+        - `"v2"` (default): an [anywidget](https://anywidget.dev)-based timeline
+          that you can zoom and pan, with hover tooltips showing the statement
+          behind each vote.
+        - `"v1"`: the original ipywidgets controls with a static matplotlib plot.
 
     Returns
     -------
-    None for `"v1"`. For `"v2"`, the widget object, which Jupyter displays when it
-    is the last expression in a cell. Setting `widget.user_id = "<id>"` switches
-    the selected participant.
+    For `"v2"`, the widget object, which Jupyter displays when it is the last
+    expression in a cell. Setting `widget.user_id = "<id>"` switches the selected
+    participant. None for `"v1"`.
 
     Assumptions
     -----------
@@ -66,25 +67,28 @@ def voter_vignette_browser(
 
     - Statements are stored in `adata.var` with columns:
         - `participant_id_authored`
-        - `created_date` (milliseconds since epoch for `"v1"`; `"v2"` accepts
-          seconds or milliseconds)
+        - `created_date` (seconds or milliseconds since epoch; `"v1"` expects
+          milliseconds)
         - `content`
         - `moderation_state` (optional, -1/0/1)
 
     Behavior
     --------
 
-    - Renders a dropdown to select a user, with buttons for random voter or commenter.
     - Plots votes over time with colors (red/neutral/green).
     - Draws vertical bars for authored statements with moderation-state coloring.
     - Displays statements below the plot in submission order.
-    - Warns if vote or statement timestamps appear out of expected ranges.
+    - Buttons pick a random voter or commenter.
+    - Warns if vote timestamps appear out of the expected range.
 
-    With `variant="v2"`, additionally:
+    With `variant="v2"` (default), additionally:
 
+    - A searchable participant picker lists everyone with vote/statement counts,
+      All/Voters/Commenters filters, sorting, and ◀ ▶ buttons to step through.
     - Scroll to zoom and drag to pan the timeline, down to second-level resolution.
       Double-click or press "Reset zoom" to return to the full range.
     - Hover a vote marker to see the statement voted on, the vote, and its time.
+      Click to pin it, then copy the text or open it in Google Translate.
     - Click an authored statement in the list to zoom to the votes around it.
 
     Examples
@@ -95,8 +99,8 @@ def voter_vignette_browser(
 
     val.viz.voter_vignette_browser(adata)
 
-    # Zoomable anywidget version
-    val.viz.voter_vignette_browser(adata, variant="v2")
+    # Original matplotlib version
+    val.viz.voter_vignette_browser(adata, variant="v1")
     ```
     <img src="../../assets/documentation-examples/viz--voter-vignette-browser.png">
     """

@@ -105,6 +105,10 @@ def test_variant_v2_returns_widget(real_adata):
     assert w.user_id in w.commenters
 
 
+def test_default_variant_is_v2(real_adata):
+    assert isinstance(val.viz.voter_vignette_browser(real_adata), VoterVignetteWidget)
+
+
 def test_unknown_variant_raises(real_adata):
     with pytest.raises(ValueError, match="variant"):
         val.viz.voter_vignette_browser(real_adata, variant="v3")
