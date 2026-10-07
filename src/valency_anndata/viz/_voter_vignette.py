@@ -98,11 +98,14 @@ def voter_vignette_browser(
     adata = val.datasets.polis.load("https://pol.is/report/r29kkytnipymd3exbynkd", translate_to="en")
 
     val.viz.voter_vignette_browser(adata)
-
-    # Original matplotlib version
-    val.viz.voter_vignette_browser(adata, variant="v1")
     ```
     <img src="../../assets/documentation-examples/viz--voter-vignette-browser.png">
+
+    Use the original matplotlib version instead.
+
+    ```py
+    val.viz.voter_vignette_browser(adata, variant="v1")
+    ```
     """
     if variant == "v2":
         from ._voter_vignette_v2 import VoterVignetteWidget
