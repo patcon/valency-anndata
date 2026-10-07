@@ -1,6 +1,6 @@
 [project]
 name = "valency-anndata"
-version = "0.4.0"
+version = "0.5.0"
 description = "Experimental tooling to support notebook analysis of polislike data"
 readme = "README.md"
 authors = [
