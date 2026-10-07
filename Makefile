@@ -49,6 +49,12 @@ h5ad: ## Export a Polis conversation to h5ad (writes to exports/)
 release: ## Print no-op documentation to guide the release process
 	uv run python scripts/release.py
 
+js: ## Build the TypeScript widget bundles into src/valency_anndata/viz/static/
+	cd js && pnpm install --frozen-lockfile && pnpm build
+
+js-watch: ## Rebuild widget bundles on change (pair with ANYWIDGET_HMR=1 in Jupyter)
+	cd js && pnpm watch
+
 build: ## Build wheel package for publishing to PyPI
 	rm -rf dist/
 	uv build
@@ -60,7 +66,7 @@ publish: ## Publish built package to PyPI
 %:
 	@true
 
-.PHONY: help strip-nb-widgets notebook-docs notebook-docs-debug serve docs lint fmt test test-live csv-export h5ad release build publish
+.PHONY: help js js-watch strip-nb-widgets notebook-docs notebook-docs-debug serve docs lint fmt test test-live csv-export h5ad release build publish
 
 help:
 	@echo 'Usage: make <command>'
