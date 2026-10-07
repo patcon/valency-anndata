@@ -129,6 +129,7 @@
 .vv-tooltip {
   position: absolute;
   z-index: 10;
+  min-width: min(220px, 80%); /* wider than the hover hint, so short statements don't resize on pin */
   max-width: min(360px, 80%);
   padding: 6px 8px;
   background: var(--vv-bg);
@@ -137,6 +138,11 @@
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
   pointer-events: none;
   line-height: 1.35;
+  /* Same box whether hovering or pinned, so pinning doesn't resize it:
+     room for the pinned close button, and a scroll limit in both states. */
+  padding-right: 22px;
+  max-height: 60%;
+  overflow-y: auto;
 }
 
 .vv-tooltip[hidden] {
@@ -237,9 +243,6 @@
 .vv-tooltip.is-pinned {
   pointer-events: auto;
   user-select: text;
-  max-height: 60%;
-  overflow-y: auto;
-  padding-right: 22px;
 }
 
 .vv-tip-hint {
